@@ -68,15 +68,21 @@ def login():
 
             if account:
                 stored_hashed_pw = account['password_hash']
+                full_name = account['full_name']
+                email = account['email']
                 if enc.check_password_hash(stored_hashed_pw, pw):
                     flash('Login Successful', 'success')
-                    msg = Message("Login Notification", recipients=[account['email']])
-                    msg.body = f"Hello {account['full_name']},\n\nYou have successfully logged in to WealthWise."
+                    
+                    
+                    
+                    msg = Message("Login Notification", recipients=[email])
+                    msg.html = render_template("welcome_login.html", full_name=full_name)
                     mail.send(msg)
+                    
                     return redirect(url_for('registration'))
                 else:
                     flash('Invalid password', 'danger')
-                    print("Invalid password")  # Debug line
+                    
             else:
                 flash('User not registered or invalid credentials', 'danger')
 
@@ -149,7 +155,7 @@ def registration():
                 cursor.close()
                 flash('You Have Successfully Registered!', 'success')
                 msg = Message("Welcome to WealthWise!", recipients=[email])
-                msg.body = f"Hello {full_name},\n\nThank you for registering on WealthWise. We're excited to have you on board!"
+                msg.html = render_template("welcome_mail.html", full_name=full_name)
                 mail.send(msg)
                 return redirect(url_for('login'))
 

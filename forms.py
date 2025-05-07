@@ -6,11 +6,11 @@ import re
 #Validations made by me
 def name_val(form,field):
     if not re.match("^[a-zA-z\s]+$",field.data):
-        raise ValidationError('Name cannot should have only letters and spaces')
+        raise ValidationError('Name should have only letters and spaces')
     
 def number_val(form,field):
     if not re.match("^\+?\d{10,15}",field.data):
-        raise ValidationError("Phone Number cannot contain only numbers")
+        raise ValidationError("Phone Number can contain only numbers")
 
 def pw_val(form, field):
     print("Password entered:", field.data)  # Debugging line

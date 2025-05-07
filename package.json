@@ -18,6 +18,9 @@
   "homepage": "https://github.com/KaushallB/WealthWise#readme",
   "dependencies": {
     "bootstrap": "^5.2.3",
-    "bootstrap-icons": "^1.12.1"
+    "bootstrap-icons": "^1.12.1",
+    "datatables.net": "^2.3.0",
+    "datatables.net-bs5": "^2.3.0",
+    "jquery": "^3.5.1"
   }
 }
