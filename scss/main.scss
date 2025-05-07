@@ -1,0 +1,23 @@
+// Custom.scss
+// Option A: Include all of Bootstrap
+$primary:#efe2ba;
+$light:#c5cbe3;
+
+
+@import "../node_modules/bootstrap/scss/_functions";
+@import "../node_modules/bootstrap/scss/_variables";
+$custom-theme-colors:(
+    "altlight":#f2ebfa,
+    "altdark":#522192,
+    "yellow":#D79922,
+    "blue":#4056a1
+
+);
+
+$theme-colors:map-merge($custom-theme-colors, $theme-colors);
+
+// Include any default variable overrides here (though functions won't be available)
+
+@import "../node_modules/bootstrap/scss/bootstrap";
+
+// Then add additional custom code here

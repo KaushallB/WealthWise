@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/main.min.css">
+    <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Document</title>
+    <style>
+        section {
+            padding: 60px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-md sticky navbar-light bg-altdark">
+        <div class="container-xxl">
+            <a href="#intro" class="navbar-brand">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cash" viewBox="0 0 16 16">
+                    <path d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+                    <path d="M0 4a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm3 0a2 2 0 0 1-2 2v4a2 2 0 0 1 2 2h10a2 2 0 0 1 2-2V6a2 2 0 0 1-2-2z"/>
+                  </svg>
+                <img class="w-25" src="assets/wwn.png" alt="logo"/>
+            </a>
+            <!-- Toggle button for mobile -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#main-nav" aria-controls="main-nav" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse justify-content-end align-center" id="main-nav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About Book</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#reviews">Reviews</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Get in Touch</a>
+                    </li>
+                    <li class="nav-item ms-2 d-none d-md-inline">
+                        <a class="btn btn-secondary" href="#pricing">Buy Now</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section id="intro">
+        <div class="container-lg">
+            <div class="row justify-content-center align-items-center">
+                <div class="col-md-5 text-center text-md-start">
+                    <h1>
+                        <div class="display-2">Black</div>
+                        <div class="display-4 text-dark">Black</div>
+                    </h1>
+                    <p class="lead my-4 text-muted">
+                        Lorem ipsum dolor sit, amet consectetur adipisicing elit. Voluptatem, error voluptatum laudantium atque corrupti iusto? Adipisci rerum eaque commodi illum optio sed dolores possimus nihil quas eos ducimus, quisquam harum?
+                    </p>
+                    <a href="#pricing" class="btn btn-secondary btn-lg">Buy Now</a>
+                </div>
+                <div class="col-md-5 text-center d-none d-md-block">
+                    <img class="img-fluid" src="assets/c.jpg" alt="Book cover image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Placeholder sections for smooth scrolling -->
+    <section id="about"></section>
+    <section id="reviews"></section>
+    <section id="contact"></section>
+    <section id="pricing" class="bg-light mt-5">
+        <div class="comtainer-lg">
+            <div class="text-center">
+                <h2>Pricing Plan</h2>
+                <p class="lead text-muted">Choose a pricing plan to suit you</p>
+            </div>
+
+            <div class="row my-5 align-items-center justify-content-center">
+                <div class="col-8 col-lg-4 col-xl-3">
+                    <div class="card border-0">
+                        <div class="card-body text-center py-5">
+                            <h4 class="card-title">Starter Edition</h4>
+                            p.lead <div class="card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Starter Edition</h4>
+                                    <p class="lead card-subtitle ">Ebook download</p>
+                                    <p class="display-5 my-4 text-primary fw-bold">$12.99</p>
+                                    <p class="card-text mx-5 text-muted d-none d-lg-block">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Repellendus minus quam sed quisquam commodi voluptatibus facere sunt modi incidunt. Accusamus dolorem minima suscipit reprehenderit consequuntur. Labore ullam itaque beatae corrupti?</p>
+                                    <a href="#" class="btn btn-outline-primary btn-lg mt-3">Buy NOw</a>
+                                    <!--offcanvas-->
+                                    <a href="#sidebar" class="d-block mt-3" data-bs-toggle="offcanvas" role="button" aria-controls="sidebar">
+                                        Explore my other books
+                                    </a>
+
+                                </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            </div>
+            <div class="row my-5 align-items-center justify-content-center">
+                <div class="col-8 col-lg-4 col-xl-3">
+                    <div class="card border-primary border-2">
+                        <div class="card-header text-center py-5">
+                            <h4 class="card-title">Complete Edition</h4>
+            
+                                    <h4 class="card-title">Starter Edition</h4>
+                                    <p class="lead card-subtitle ">Ebook download</p>
+                                    <p class="display-5 my-4 text-primary fw-bold">$12.99</p>
+                                    <p class="card-text mx-5 text-muted d-none d-lg-block">Lorem ipsum dolor, sit amet consectetur adipisicing elit. Repellendus minus quam sed quisquam commodi voluptatibus facere sunt modi incidunt. Accusamus dolorem minima suscipit reprehenderit consequuntur. Labore ullam itaque beatae corrupti?</p>
+                                    <a href="#" class="btn btn-outline-primary btn-lg mt-3">Buy NOw</a>
+
+                                </div>
+                    </div>
+                </div>
+            </div>
+        
+    </div>
+    </section>
+
+<section id="reviews" class="bg-light">
+    <div class="container-lg">
+        <div class="text-center">
+            <h2>Book Reviews</h2>
+            <p class="lead">
+                This is a lead paragraph. It stands out from regular paragraphs.
+            </p>
+            
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="list-group">
+                    <div class="list-group-item py-3">
+                        <h5 class="mb-5">Must buy hai</h5>
+                        <p class="mb-5">Lorem ipsum dolor sit amet consectetur adipisicing elit. Impedit, nisi praesentium. Dignissimos id modi, accusamus ex vel aliquam culpa doloremque ratione at blanditiis distinctio inventore, eveniet voluptatibus qui, officiis suscipit.</p>
+                        <small>Review By Kaushal</small>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+<section class="contact">
+    <div class="container-lg">
+        <div class="text-center">
+            <h2>Get in Touch</h2>
+            <p class="lead">QUestions to ask?Fill out the form..</p-class>
+
+        </div>
+        <div class="row-justify-content-center my-5">
+            <div class="col-lg-6">
+                <form>
+                    <label for="email" class="form-label">Email</label>
+                    <div class="mb-4 input-group">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-badge-fill" viewBox="0 0 16 16">
+                                <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm4.5 0a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zM8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6m5 2.755C12.146 12.825 10.623 12 8 12s-4.146.826-5 1.755V14a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1z"/>
+                              </svg>
+                        </span>
+                        <input type="email" class="form-control" id="email" placeholder="Kaushal"/>
+                    </div>
+                    
+                    
+                    <label for="name" class="form-label">Name</label>
+                    <div class="input-group mb-4">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-open-fill" viewBox="0 0 16 16">
+                                <path d="M8.941.435a2 2 0 0 0-1.882 0l-6 3.2A2 2 0 0 0 0 5.4v.314l6.709 3.932L8 8.928l1.291.718L16 5.714V5.4a2 2 0 0 0-1.059-1.765zM16 6.873l-5.693 3.337L16 13.372v-6.5Zm-.059 7.611L8 10.072.059 14.484A2 2 0 0 0 2 16h12a2 2 0 0 0 1.941-1.516M0 13.373l5.693-3.163L0 6.873z"/>
+                              </svg>
+                        </span>
+                        <input type="text" class="form-control" id="name"/>
+                        <span class="input-group-text">
+                            <!--tooltip-->
+                            <span class="tt" data-bs-placement="bottom" title="Enter email address we can reply to">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle text-muted" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                              </svg>
+                            </span>
+                        </span>
+                    </div>
+                  
+
+                    <label for="subject" class="form-label mt-4">What is your question?</label>
+                    <div class="input-group mb-4">
+                        <span class="input-group-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286m1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94"/>
+                              </svg>
+                        </span>
+                        <select class="form-select" id="subject">
+                            <option value="Pricing">Pricing</option>
+                            <option value="content">Content</option>
+                            <option value="other">Other QnA</option>
+                        </select>
+                    </div>
+                    
+
+                    <div class="form-floating mt-4">
+                    <label for="query" class="form-label">Your query..</label>
+                    <textarea name="b" id="query" class="form-control" style="height:140px"></textarea>
+
+                </div>
+
+                <div class="mb-4 text-center">
+                    <button type="submit" class="btn btn-secondary">Submit</button>
+                </text-center>
+
+
+
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+<!--modal trigger-->
+<section class="bg-light">
+    <div class="container">
+        <div class="text-center">
+            <h2>Stay in Loop</h2>
+            <p class="lead">GEt the latest updates</p>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <p class="text-muted">Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas quibusdam rerum necessitatibus, rem illo, praesentium repudiandae, blanditiis corrupti laboriosam unde non. Eveniet illum quibusdam architecto facere, autem qui omnis. Unde?</p>
+                <button class="btn btn-primary" data-bs-toggle="modal"
+                data-bs-target="#reg-modal">
+            Register for updates
+            </button>
+            </div>
+        </div>
+    </div>
+</section>
+<!--Modal now-->
+<div class="modal fade" id="reg-modal" tabindex="-1" aria-labelledby="'modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                 <h5 id="modal-title">Get latest updates</h5>
+                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Nesciunt veniam est eum pariatur soluta, itaque delectus, maxime fugit corrupti assumenda nobis impedit quasi quia molestias expedita recusandae? Aut, sint esse!
+                <label for="email" class="form-label">youe email</label>
+                <input type="email" class="form-control" id="modal-email">
+            </div>
+            <div class="modal-footer">
+                <button class="btn brn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--offcanvas-->
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebar-label">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="sidebar-label">My other books</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+       <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Cumque voluptas, vero eaque aliquam distinctio delectus magnam voluptates soluta totam quae tempora nobis iste cum voluptatum a omnis rem nostrum! Atque.</p> 
+       <!--Dropdown-->
+       <div class="dropdown mt-3">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="book-dropdown" data-bs-toggle="dropdown">
+            Choose book title
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="book-dropdown">
+            <li><a href="#" class="dropdown-item">Become a Flask devs</a></li>
+            <li><a href="#" class="dropdown-item">Become a NJ devs</a></li>
+            <li><a href="#" class="dropdown-item">Become a Python devs</a></li>
+        </ul>
+       </div>
+    </div>
+
+</div>
+
+<script>
+    const tooltips=document.queryselectorAll('.tt')
+    toolstips.array.forEach(t => {
+        new bootstrap.Tooltip(t)
+        
+    });
+</script>
+</body>
+</html>
