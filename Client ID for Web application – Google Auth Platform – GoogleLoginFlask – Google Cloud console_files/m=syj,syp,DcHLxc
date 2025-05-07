@@ -1,0 +1,14 @@
+"use strict";this.default_r_qwpltlpci=this.default_r_qwpltlpci||{};(function(_){var window=this;
+try{
+var MCb=class{};MCb.ea=function(a){return new (a||MCb)};MCb.Ba=_.ff({type:MCb,id:"pm_section_nav_service_module"});MCb.Aa=_.gd({providers:[{Ha:_.vo,xb:{SectionNavService:_.rx}}],imports:[_.xr]});_.Qf(MCb,"pm_section_nav_service_module");
+}catch(e){_._DumpException(e)}
+try{
+_.Px=class{constructor(){this.aa=_.r(_.Qs);const a=_.r(_.rx);var b=this.aa.aa.has("section-nav-panel")?this.aa.aa.get("section-nav-panel"):null;b=b?b.isOpenChanges.pipe(_.B(c=>!c)):_.A(!1);this.isResponsiveSectionNavAvailable=_.qe([a.isSectionNavEnabled,b]).pipe(_.B(([c,d])=>c&&d),_.uf(),_.Ff(1),_.oe())}};_.Px.ea=function(a){return new (a||_.Px)};_.Px.oa=_.n({token:_.Px,na:_.Px.ea,va:"root"});
+}catch(e){_._DumpException(e)}
+try{
+_.Hh("DcHLxc");
+
+_.Jh();
+}catch(e){_._DumpException(e)}
+}).call(this,this.default_r_qwpltlpci);
+// Google Inc.

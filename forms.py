@@ -36,6 +36,6 @@ class RegistrationForm(FF):
 
 class LoginForm(FF):
     email_or_phone = StringField('Email or Phone', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired(), pw_val])
+    password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
