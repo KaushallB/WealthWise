@@ -6,7 +6,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+    <title>Dashboard</title>
 </head>
 <body>
     <div class="wrapper">
@@ -17,24 +17,17 @@
                 </div>
                 <ul class="sidebar-nav">
                     <li class="sidebar-header">
-                        Admin Elements
+                        User Control Panel
                     </li>
                     <li class="sidebar-item">
                         <a href="#" class="sidebar-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-speedometer2" viewBox="0 0 16 16">
-                                <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4M3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707M2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10m9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5m.754-4.246a.39.39 0 0 0-.527-.02L7.547 9.31a.91.91 0 1 0 1.302 1.258l3.434-4.297a.39.39 0 0 0-.029-.518z"/>
-                                <path fill-rule="evenodd" d="M0 10a8 8 0 1 1 15.547 2.661c-.442 1.253-1.845 1.602-2.932 1.25C11.309 13.488 9.475 13 8 13c-1.474 0-3.31.488-4.615.911-1.087.352-2.49.003-2.932-1.25A8 8 0 0 1 0 10m8-7a7 7 0 0 0-6.603 9.329c.203.575.923.876 1.68.63C4.397 12.533 6.358 12 8 12s3.604.532 4.923.96c.757.245 1.477-.056 1.68-.631A7 7 0 0 0 8 3"/>
-                            </svg>
+                            <i class="bi bi-speedometer2"></i>
                             Dashboard
                         </a>
                     </li>
                     <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed" data-bs-target="#transactions" data-bs-toggle="collapse" aria-expanded="false">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-coin" viewBox="0 0 16 16">
-                                <path d="M5.5 9.511c.076.954.83 1.697 2.182 1.785V12h.6v-.709c1.4-.098 2.218-.846 2.218-1.932 0-.987-.626-1.496-1.745-1.76l-.473-.112V5.57c.6.068.982.396 1.074.85h1.052c-.076-.919-.864-1.638-2.126-1.716V4h-.6v.719c-1.195.117-2.01.836-2.01 1.853 0 .9.606 1.472 1.613 1.707l.397.098v2.034c-.615-.093-1.022-.43-1.114-.9zm2.177-2.166c-.59-.137-.91-.416-.91-.836 0-.47.345-.822.915-.925v1.76h-.005zm.692 1.193c.717.166 1.048.435 1.048.91 0 .542-.412.914-1.135.982V8.518z"/>
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 0 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="M8 13.5a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11m0 .5A6 6 0 1 0 8 2a6 6 0 0 0 0 12"/>
-                            </svg>
+                        <a href="#" class="sidebar-link collapsed" data-bs-target="#transactions" data-bs-toggle="collapse" aria-expanded="false" onclick="console.log('Transactions clicked')">
+                            <i class="bi bi-coin"></i>
                             Transactions
                         </a>
                         <ul id="transactions" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
@@ -51,19 +44,13 @@
                     </li>
                     <li class="sidebar-item">
                         <a href="#" class="sidebar-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-robot" viewBox="0 0 16 16">
-                                <path d="M6 12.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5M3 8.062C3 6.76 4.235 5.765 5.53 5.886a26.6 26.6 0 0 0 4.94 0C11.765 5.765 13 6.76 13 8.062v1.157a.93.93 0 0 1-.765.935c-.845.147-2.34.346-4.235.346s-3.39-.2-4.235-.346A.93.93 0 0 1 3 9.219zm4.542-.827a.25.25 0 0 0-.217.068l-.92.9a25 25 0 0 1-1.871-.183.25.25 0 0 0-.068.495c.55.076 1.232.149 2.02.193a.25.25 0 0 0 .189-.071l.754-.736.847 1.71a.25.25 0 0 0 .404.062l.932-.97a25 25 0 0 0 1.922-.188.25.25 0 0 0-.068-.495c-.538.074-1.207.145-1.98.189a.25.25 0 0 0-.166.076l-.754.785-.842-1.7a.25.25 0 0 0-.182-.135"/>
-                                <path d="M8.5 1.866a1 1 0 1 0-1 0V3h-2A4.5 4.5 0 0 0 1 7.5V8a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1v1a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1v-.5A4.5 4.5 0 0 0 10.5 3h-2zM14 7.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.5A3.5 3.5 0 0 1 5.5 4h5A3.5 3.5 0 0 1 14 7.5"/>
-                            </svg>
+                            <i class="bi bi-robot"></i>
                             Chatbot
                         </a>
                     </li>
                     <li class="sidebar-item">
                         <a href="#" class="sidebar-link">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-left" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/>
-                                <path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/>
-                            </svg>
+                            <i class="bi bi-box-arrow-left"></i>
                             Logout
                         </a>
                     </li>
@@ -95,41 +82,71 @@
                 </div>
             </nav>
             <main class="content px-3 py-2">
-                <div class="container-fluid">
-                    <div class="mb-3">
-                        <h4>User Dashboard</h4>
+                <div class="container">
+                    <div class="mb-3 text-center">
+                        <h5>User Dashboard</h5>
+                        <h3 class="welcome-text mb-0">Welcome, {{user}}</h6>
                     </div>
-                    <div class="row">
-                        <div class="col-12 col-md-6 d-flex">
-                            <div class="card flex-fill border-0 illustration">
-                                <div class="card-body p-0 d-flex flex-fill bg-primary">
-                                    <div class="row g-0 w-100">
-                                        <div class="col-6 bg-primary">
-                                            <div class="p-3 m-1">
-                                                <h4>Welcome back, ADmin</h4>
-                                                <p class="mb-0">Admin's Dashboard, WealthWise</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-6 align-self-end text-end">
-                                            <img src="./static/assets/welcome.jpg" class="img-fluid illustration-img bg-light" alt="Support">
-                                        </div>
+                    <!-- First Row: Total Income, Total Expenses, 50/30/20 Budget Allocation -->
+                    <div class="row g-3 mb-3 justify-content-center">
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <div class="card p-2 bg-success text-white text-center">
+                                <div class="card-title fs-6">Total Income</div>
+                                <h4 class="mb-1 text-white">Rs 25000</h4>
+                                <small>Monthly After-Tax Income</small>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <div class="card p-2 bg-danger text-white text-center">
+                                <div class="card-title fs-6">Total Expenses</div>
+                                <h4 class="mb-1 text-white">Rs 15000</h4>
+                                <small>This Month</small>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4 col-lg-4">
+                            <div class="card p-2 bg-yellow" style="background:#EFB11D;">
+                                <div class="card-title text-center fs-6 text-white fw-600">50/30/20 Budget Allocation</div>
+                                <div class="row g-2 justify-content-center">
+                                    <div class="col-4 bg-purple text-white p-2" style="background:#a084e8;">
+                                        <h6 class="mb-0">Needs (50%)</h6>
+                                        <p class="mb-0">Rs 12500</p>
+                                    </div>
+                                    <div class="col-4 bg-blue text-white p-2" style="background:#4056A1;">
+                                        <h6 class="mb-0">Wants (30%)</h6>
+                                        <p class="mb-0">Rs 7500</p>
+                                    </div>
+                                    <div class="col-4 bg-info text-white p-2">
+                                        <h6 class="mb-0">Savings (20%)</h6>
+                                        <p class="mb-0">Rs 5000</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12 col-md-6 d-flex">
-                            <div class="card flex-fill border-0">
-                                <div class="card-body py-4">
-                                    <div class="d-flex align-items-start">
-                                        <div class="flex-grow-1">
-                                            <h4 class="mb-2">Rs 25000</h4>
-                                            <p class="mb-2">Total Income</p>
-                                            <div class="mb-0">
-                                                <span class="badge text-success me-2">+9.0%</span>
-                                                <span class="text-muted">Since Last Week</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                    </div>
+                    <!-- Second Row: Pie Chart (Left) and Spending Cards (Right) -->
+                    <div class="row g-3 mb-3 justify-content-center">
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6 ">50/30/20 Budget Breakdown</div>
+                                <canvas id="budgetPieChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-4 justify-content-center">
+                            <div class="d-flex flex-column gap-3 ">
+                                <div class="card p-2 bg-pink text-white text-center" style="background:#E7717d;">
+                                    <div class="card-title fs-6">Needs Spending</div>
+                                    <h5 class="mb-1">Rs 10000 / Rs 12500</h5>
+                                    <small>80% of Needs Budget Used</small>
+                                </div>
+                                <div class="card p-2 bg-soft text-white text-center" style="background:#EDC7B7;">
+                                    <div class="card-title fs-6">Wants Spending</div>
+                                    <h5 class="mb-1">Rs 5000 / Rs 7500</h5>
+                                    <small>67% of Wants Budget Used</small>
+                                </div>
+                                <div class="card p-2 bg-success text-white text-center">
+                                    <div class="card-title fs-6">Savings Progress</div>
+                                    <h5 class="mb-1">Rs 4000 / Rs 5000</h5>
+                                    <small>80% of Savings Goal Met</small>
                                 </div>
                             </div>
                         </div>
@@ -138,7 +155,50 @@
             </main>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
-    <script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-HjW8v0j/fcO5z3XqI2q3Xv7lX5u5f7f5g5h5i5j5k5l5m5n5o5p5q5r5s5t5u5v5w5x5y5z" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="./static/js/bootstrap.bundle.min.js"></script> 
+<script src="script.js"></script>
+<script>
+        // Pie chart for 50/30/20 budget allocation
+        const ctx = document.getElementById('budgetPieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Needs (50%)', 'Wants (30%)', 'Savings (20%)'],
+                datasets: [{
+                    data: [50, 30, 20], // Percentage allocation
+                    backgroundColor: ['#a084e8', '#4056A1', '#17a2b8'] // Matching card colors
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `${tooltipItem.label}: ${tooltipItem.raw}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+</script>
 </body>
 </html>
+
+
+
+
+
