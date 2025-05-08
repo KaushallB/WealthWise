@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+*,
+::after,
+::before{
+    box-sizing: border-box;
+}
+:root {
+    --bs-primary: #efe2ba; 
+    --bs-primary-rgb: 239, 226, 186; 
+}
+
+a{
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Outfit',sans-serif;
+}  
+
+h4{
+    font-family: 'Outfit',sans-serif;
+    font-size: 1.5rem;
+    color:var(--bs-emphasis-color);
+}
+
+li{
+    list-style: none;
+}
+
+body{
+    font-family: 'Outfit',serif;
+    font-size: 0.875em;
+    opacity: 1;
+    overflow-y:scroll ;
+    margin: 0;
+}
+
+.wrapper{
+
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+.main{
+    display: flex;
+    flex-direction: column;
+    min-height:100vh ;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    transition: all 0.25s ease-in-out;
+    background:var(--bs-body-bg);
+}
+#sidebar{
+    max-width: 264px;
+    min-width: 264px;
+    transition: all 0.25s ease-in-out;
+    background:var(--bs-dark);
+}
+
+.sidebar-logo{
+    padding: 2rem;
+}
+.sidebar-logo a{
+    color:aliceblue ;
+    font-size: 2rem;
+    font-weight: 700;
+}
+.sidebar-nav{
+    flex-grow: 1;
+    list-style: none;
+    margin-bottom: 0;
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.sidebar-header{
+    color: aliceblue;
+    font-size: 0.85rem;
+    padding: 1.5rem 1.5rem .375rem;
+}
+a.sidebar-link{
+    padding:.625rem 1.625rem ;
+    color: aliceblue;
+    position: relative;
+    display: block;
+    font-size: 0.875rem;
+}
+.sidebar-link[data-bs-toggle="collapse"]::after{
+    border: solid;
+    border-width: 0 .075rem .075rem 0;
+    content: "";
+    display: inline-block;
+    padding: 2px;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.4rem;
+    transform: rotate(-135deg);
+    transition: all 0.5s ease-out;
+    
+}
+.sidebar-link[data-bs-toggle="collapse"].collapsed::after{
+    transform: rotate(45deg);
+    transition: all 0.2s ease-out;
+}
+.avatar{
+   height: 50px;
+   width: 50px;
+
+}
+.navbar-expand .navbar-nav{
+    margin-left: auto;
+}
+.content{
+    flex: 1;
+    max-width:100vw;
+    width: 100vw;
+}
+@media (min-width:768px) {
+    .content{
+        max-width: auto;
+        width: auto;
+    }
+}
+.card{
+    box-shadow: 0 0 .875rem 0 rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+    border: 1px solid #ddd; 
+    border-radius: 8px;
+    background-color: var(--bs-light-bg-subtle);
+
+}
+.illustration{
+    
+    color: var(--bs-emphasis-color);
+    border-radius: 8px;
+}
+.illustration-img{
+    max-width: 150px;
+    width: 100%;
+}
+.card-body{
+    padding: 1rem;
+}
+#sidebar.collapsed{
+    margin-left: -264px;
+}
+
+
+html[data-bs-theme="dark"] {
+    --bs-primary: #efe2ba;
+    --bs-primary-rgb: 239, 226, 186;
+}
+
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.btn-primary:hover {
+    background-color: #e6d9a8;
+    border-color: #e6d9a8;
+}
+
+.bg-primary {
+    background-color: var(--bs-primary) ;
+}
+
+html[data-bs-theme="dark"] .bg-primary {
+    background-color: #d4c89e; 
+}
+
+.text-primary {
+    color: var(--bs-primary);
+}
+
+/* Ensuring text inside .bg-primary card is black in both themes */
+.bg-primary h4,
+.bg-primary p {
+    color: #000000 ;
+}
+
+html[data-bs-theme="dark"] .bg-primary h4,
+html[data-bs-theme="dark"] .bg-primary p,
+html[data-bs-theme="light"] .bg-primary h4,
+html[data-bs-theme="light"] .bg-primary p {
+    color: #000000 ;
+}
+
+/* Theme toggle */
+.theme-toggle {
+    padding-right: 1rem;
+    margin-right: 1rem;
+    background-color: var(--bs-body-bg);
+    z-index: 1;
+}
+
+html[data-bs-theme="dark"] .theme-toggle {
+    background-color: var(--bs-body-bg);
+}
+
+html[data-bs-theme="light"] .theme-toggle {
+    background-color: var(--bs-body-bg);
+}
+
+html[data-bs-theme="dark"] .theme-toggle .bi-brightness-low,
+html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
+    cursor: pointer;
+    padding: 10px;
+    font-size: 1.25rem;
+    color: var(--bs-primary);
+}
+
+html[data-bs-theme="dark"] .theme-toggle .bi-brightness-low {
+    display: none;
+}
+
+html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
+    display: none;
+}

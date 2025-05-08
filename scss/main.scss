@@ -1,7 +1,18 @@
 // Custom.scss
 // Option A: Include all of Bootstrap
+
+$color-mode-type: data;
+
+@include color-mode(dark) {
+  .element {
+    color: var(--bs-primary-text-emphasis);
+    background-color: var(--bs-primary-bg-subtle);
+  }
+}
+
 $primary:#efe2ba;
 $light:#c5cbe3;
+
 
 
 @import "../node_modules/bootstrap/scss/_functions";
