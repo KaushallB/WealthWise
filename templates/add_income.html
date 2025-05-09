@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Add Income -WealthWise{% endblock %}
+
+{% block main_content %}
+
+<style>
+body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Arial', sans-serif;
+}    
+.card {
+            border: none;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+}
+.card:hover {
+            transform: translateY(-5px);
+}
+.form-control, .form-select {
+            border-color: #3498db;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+}
+.form-control:focus, .form-select:focus {
+            border-color: #e67e22;
+            box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+}
+.btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+}
+.btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            transform: scale(1.05);
+}
+.btn-secondary {
+            background-color: #e67e22;
+            border-color: #e67e22;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+}
+.btn-secondary:hover {
+            background-color: #d35400;
+            border-color: #d35400;
+            transform: scale(1.05);
+}
+.income-card {
+        background-color: #e8f0fe;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+}
+@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+}
+.fade-in {
+            animation: fadeIn 1s ease-in;
+}
+</style>
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
+            <h2 class="text-center mb-4 fade-in" style="color: #333; font-size: 2.5rem;">
+            <img src="{{ url_for('static', filename='assets/logow.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income</h2>
+        <form id="income-form" method="POST" action="{{url_for('add_income',user_id=user.id)}}">
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount (Rs)</label>
+                <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount" step="0.01" 
+                value="{{income.amount if income else ''}}" required>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select" required>
+                    <option value="">Select a category</option>
+                        <option value="salary" {% if income and income.category == 'salary' %}selected{% endif %}>Salary</option>
+                        <option value="savings" {% if income and income.category == 'savings' %}selected{% endif %}>Savings</option>
+                        <option value="business" {% if income and income.category == 'business' %}selected{% endif %}>Business</option>
+                        <option value="other" {% if income and income.category == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{income.date if income else today}}" required>
+            </div> 
+            
+        <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <input type="text" id="description" value="{{income.description if income else ''}}" name="description" class="form-control" placeholder="Add a note (e.g., To Pay)" >
+        </div>  
+        <input type="hidden" id="income-id" name="income_id" value="{{ income.id if income else ''}}">
+
+        <button type="submit" id="action-btn" class="btn btn-primary w-100">{{ 'Update Income' if income else 'Add Income' }}</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="{{url_for('dashboard',user_id=user.id)}}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+        <div class="income-card">
+            <h5 class="text-center">Recent Incomes</h5>
+            {% if recent_incomes %}
+                {% for recent_income in recent_incomes %}
+            <div class="card mb-2 p-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>{{recent_income.category|capitalize}}:Rs{{recent_income.amount|round(2)}}
+                         ({{recent_income.date}})-{{ recent_income.description if recent_income.description else '' }}</span>
+                    <div>
+                        <a href="{{url_for('edit_income',user_id=user.id,income_id=recent_income.id)}}" class="btn btn-sm btn-primary me-2">Edit</a>
+                       <form action="{{ url_for('delete_income', user_id=user.id, income_id=recent_income.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger me-2">Delete</button>
+                            </form>
+                    </div>
+                </div>
+            </div>
+             {% endfor %}
+        {% else %}
+            <p class="text-center">No recent incomes found</p>
+        {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+   
+    {% if not income %}
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    {% endif %}
+</script>
+{% endblock %}

@@ -443,6 +443,110 @@ def chatbot(user_id):
     except Exception as e:
         return jsonify({'response': f'Error: {str(e)}'}), 500
 
+@app.route('/add_income/<int:user_id>',methods=['GET','POST'])
+def add_income(user_id):
+    if not is_logged_in or session['user_id']!=user_id:
+        flash('Please log in to add income','danger')
+        return redirect(url_for('logout'))
     
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s',(user_id,))
+        user=cursor.fetchone()
+        if not user:
+            flash('User not found','danger')
+            return redirect(url_for('login'))
+
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC LIMIT 5", (user_id,))
+        recent_incomes = cursor.fetchall()
+        
+        if request.method=='POST':
+            amount = request.form.get('amount')
+            category = request.form.get('category')
+            date = request.form.get('date')
+            description = request.form.get('description')
+            income_id = request.form.get('income_id')
+            
+            if not amount or not category or not date:
+                flash('All fields are required.', 'danger')
+                
+            else:
+                if income_id:
+                    cursor.execute(
+                        "UPDATE transactions SET amount=%s, category=%s, date=%s, description=%s WHERE id=%s AND user_id=%s",
+                        (Decimal(amount), category, date, description, income_id, user_id)
+                    )
+                    mysql.connection.commit()
+                    flash('Income updated successfully!', 'success')
+                else: #adding
+                    cursor.execute(
+                        "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'income', %s, %s, %s, %s)",
+                        (user_id, category, Decimal(amount), date, description)
+                    )
+                    mysql.connection.commit()
+                    flash('Income added successfully!', 'success')
+                return redirect(url_for('add_income', user_id=user_id))
+        today=datetime.now().strftime('%Y-%m-%d')
+        return render_template('add_income.html', user=user, today=today, recent_incomes=recent_incomes, income=None)
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('dashboard', user_id=user_id))
+    
+@app.route('/edit_income/<int:user_id>/<int:income_id>', methods=['GET'])
+def edit_income(user_id, income_id):
+    if not is_logged_in() or session['user_id'] != user_id:
+        flash('Please log in to edit income.', 'danger')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('login'))
+        
+        cursor.execute("SELECT * FROM transactions WHERE id=%s AND user_id=%s AND transaction_type='income'", (income_id, user_id))
+        income = cursor.fetchone()
+        if not income:
+            flash('Income not found.', 'danger')
+            return redirect(url_for('add_income', user_id=user_id))
+        
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC LIMIT 5", (user_id,))
+        recent_incomes = cursor.fetchall()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        return render_template('add_income.html', user=user, today=today, recent_incomes=recent_incomes, income=income)
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('dashboard', user_id=user_id))
+  
+@app.route('/delete_income/<int:user_id>/<int:income_id>', methods=['POST'])
+def delete_income(user_id, income_id):
+    if not is_logged_in() or session['user_id'] != user_id:
+        flash('Please log in to delete income.', 'danger')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('login'))
+        
+        # Delete the income record
+        cursor.execute("DELETE FROM transactions WHERE id=%s AND user_id=%s AND transaction_type='income'", (income_id, user_id))
+        mysql.connection.commit()
+        
+        flash('Income deleted successfully!', 'success')
+        return redirect(url_for('add_income', user_id=user_id))
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('add_income', user_id=user_id))
+   
 if __name__ == '__main__':
     app.run(debug=True)
