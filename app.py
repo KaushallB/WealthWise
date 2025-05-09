@@ -336,7 +336,7 @@ model = OllamaLLM(model="llama3")
 
 
 
-@app.route('/chatbot/<int:user_id>',methods=['GET','POST'])
+@app.route('/chatbot/<int:user_id>', methods=['GET', 'POST'])
 def chatbot(user_id):
     if not is_logged_in():
         flash('Please log in to access the chatbot.', 'danger')
@@ -349,17 +349,17 @@ def chatbot(user_id):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
         user = cursor.fetchone()
-        full_name=user['full_name']
-        management_type=user['account_type']
+        full_name = user['full_name']
+        management_type = user['account_type']
         
         if not user:
-            return jsonify('SELECT * FROM users WHERE id=%s',(user_id,))  #Jsonify uses AJAX for realtime communication without reloading page raicha
+            return jsonify({'response': 'User not found.'}), 400
         
         cursor.execute('''SELECT transaction_type, category, SUM(amount) as total
                         FROM transactions
                         WHERE user_id=%s
                         GROUP BY transaction_type, category''', (user_id,))
-        transactions=cursor.fetchall()
+        transactions = cursor.fetchall()
         
         total_income = Decimal('0.0')
         needs_spent = Decimal('0.0')
@@ -367,9 +367,9 @@ def chatbot(user_id):
         savings_saved = Decimal('0.0')
         
         for transaction in transactions:
-            amount=transaction['total']
-            transaction_type=transaction['transaction_type']
-            category=transaction['category'].lower()
+            amount = transaction['total']
+            transaction_type = transaction['transaction_type']
+            category = transaction['category'].lower()
         
             if transaction_type == 'income':
                 total_income += amount
@@ -380,11 +380,13 @@ def chatbot(user_id):
                     needs_spent += amount
                 elif category == 'wants':
                     wants_spent += amount
+        
+        # Use NPR (Nepali Rupees) as specified in the template
         financial_data = (
-            f"Total Income: ${float(total_income):.2f}, "
-            f"Needs Spent: ${float(needs_spent):.2f} (Budget: 50%), "
-            f"Wants Spent: ${float(wants_spent):.2f} (Budget: 30%), "
-            f"Savings: ${float(savings_saved):.2f} (Goal: 20%)"
+            f"Total Income: Rs {float(total_income):.2f}, "
+            f"Needs Spent: Rs {float(needs_spent):.2f} (Budget: 50%), "
+            f"Wants Spent: Rs {float(wants_spent):.2f} (Budget: 30%), "
+            f"Savings: Rs {float(savings_saved):.2f} (Goal: 20%)"
         )
         
         if request.method == 'POST':
@@ -394,51 +396,54 @@ def chatbot(user_id):
                 return jsonify({'response': 'Please enter a message.'}), 400
             
             if management_type == 'shop':
-                    template = """
-                    You are a financial advisor for WealthWise, a shop or business management and recommendation app for small businesses or shops in Nepal. 
-                    Provide concise, accurate business advice (under 100 words) in NPR, focusing on maximizing profit, optimizing inventory, and managing expenses and help improve sales and reduce expenses . 
-                    The average income of nepalese shops and businesses  depends on their sales and profit ranging from Rs 15000.00 to 50000.00 or above and also have to bear all the rent costs and other costs.
-                    Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-                    If the query is unclear, suggest asking about profit strategies or expense management.
+                template = """
+                You are a financial advisor for WealthWise, a shop or business management and recommendation app for small businesses or shops in Nepal. 
+                Provide concise, accurate business advice (under 100 words) in NPR, focusing on maximizing profit, optimizing inventory, and managing expenses and help improve sales and reduce expenses . 
+                The average income of Nepalese shops and businesses depends on their sales and profit ranging from Rs 15000.00 to 50000.00 or above and also have to bear all the rent costs and other costs.
+                Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
+                If the query is unclear, suggest asking about profit strategies or expense management.
 
-                    User's financial data: {financial_data}
+                User's financial data: {financial_data}
 
-                    Conversation history: {context}
+                Conversation history: {context}
 
-                    Question: {question}
+                Question: {question}
 
-                    Answer:
-                    """
-                
-            if management_type=='personal':
-                        template = """
-                            You are a financial advisor for WealthWise, a finance management,adivising and recommendation app for  students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
-                            are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
-                            The average income of nepalese students is from around Rs 5000.00 to Rs 25000.00 and dont use $ and compare it with USD.
-                            Use the user's financial data, and use nepali currency. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-                            If the query is unclear, suggest asking about budgeting or expenses.
+                Answer:
+                """
+            
+            if management_type == 'personal':
+                template = """
+                You are a financial advisor for WealthWise, a finance management, advising and recommendation app for students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
+                Needs are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
+                The average income of Nepalese students is from around Rs 5000.00 to Rs 25000.00.
+                Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
+                If the query is unclear, suggest asking about budgeting or expenses.
 
-                            User's financial data: {financial_data}
+                User's financial data: {financial_data}
 
-                            Conversation history: {context}
+                Conversation history: {context}
 
-                            Question: {question}
+                Question: {question}
 
-                            Answer:
-                            """
+                Answer:
+                """
             
             prompt = ChatPromptTemplate.from_template(template)
             chain = prompt | model
             
-            responseofai=chain.invoke({
-                "financial_data":financial_data,
-                "context":context,
-                "question":user_message
+            responseofai = chain.invoke({
+                "financial_data": financial_data,
+                "context": context,
+                "question": user_message
             })
 
-            new_context=f"{context}\nUser:{user_message}\nAI:{responseofai}".strip()
-            return jsonify({'response':responseofai,'context':new_context})
-        return render_template('chatbot.html',user=user,full_name=full_name)
+            new_context = f"{context}\nUser:{user_message}\nAI:{responseofai}".strip()
+            return jsonify({'response': responseofai, 'context': new_context})
+        
+        # Handle GET request with pre-filled question
+        prefilled_question = request.args.get('question', '')
+        return render_template('chatbot.html', user=user, full_name=full_name, prefilled_question=prefilled_question)
     
     except Exception as e:
         return jsonify({'response': f'Error: {str(e)}'}), 500
@@ -465,7 +470,7 @@ def add_income(user_id):
             category = request.form.get('category')
             date = request.form.get('date')
             description = request.form.get('description')
-            income_id = request.form.get('income_id')
+            income_id = request.form.get('id')
             
             if not amount or not category or not date:
                 flash('All fields are required.', 'danger')
@@ -478,7 +483,7 @@ def add_income(user_id):
                     )
                     mysql.connection.commit()
                     flash('Income updated successfully!', 'success')
-                else: #adding
+                else: 
                     cursor.execute(
                         "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'income', %s, %s, %s, %s)",
                         (user_id, category, Decimal(amount), date, description)
@@ -547,6 +552,118 @@ def delete_income(user_id, income_id):
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('add_income', user_id=user_id))
-   
+  
+@app.route('/add_expense/<int:user_id>',methods=['GET','POST'])
+def add_expense(user_id):
+    if not is_logged_in() or session['user_id']!=user_id:
+        flash('Please login to add expense','danger')
+        return redirect(url_for('logout')) 
+    
+    try:
+        cursor=mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users where id=%s',(user_id,))
+        user=cursor.fetchone()
+        
+        if not user:
+            flash('User not found','danger')
+            return redirect(url_for('login'))
+        
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC LIMIT 5",(user_id,))
+        recent_exp=cursor.fetchall()
+        
+        if request.method=='POST':
+            amount=request.form.get('amount')
+            category=request.form.get('category')
+            date=request.form.get('date')
+            descrip=request.form.get('description','')
+            expense_id=request.form.get('id')
+            
+            if not amount or not category or not date:
+                flash('Amount, category, and date are required.', 'danger')
+            else:
+               if expense_id:
+                    cursor.execute(
+                        "UPDATE transactions SET amount=%s, category=%s, date=%s, description=%s WHERE id=%s AND user_id=%s",
+                        (Decimal(amount), category, date, descrip, expense_id, user_id)
+                    )
+                    mysql.connection.commit()
+                    flash('Expense updated successfully!', 'success')
+               else:
+                    cursor.execute(
+                        "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'expense', %s, %s, %s, %s)",
+                        (user_id, category, Decimal(amount), date, descrip)
+                    )
+                    mysql.connection.commit()
+                    flash('Expense added successfully!', 'success')
+                    
+            return redirect(url_for('add_expense', user_id=user_id))
+                  
+                
+        
+        today=datetime.now().strftime('%Y-%m-%d')
+        return render_template('add_expense.html', user=user, today=today, recent_expenses=recent_exp, expense=None)
+             
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('login'))
+    
+@app.route('/edit_expense/<int:user_id>/<int:id>', methods=['GET'])
+def edit_expense(user_id, id):
+    if not is_logged_in() or session['user_id'] != user_id:
+        flash('Please log in to edit expense.', 'danger')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('login'))
+        
+        cursor.execute("SELECT * FROM transactions WHERE id=%s AND user_id=%s AND transaction_type='expense'", (id, user_id))
+        expense = cursor.fetchone()
+        if not expense:
+            flash('Expense not found.', 'danger')
+            return redirect(url_for('add_expense', user_id=user_id))
+        
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC LIMIT 5", (user_id,))
+        recent_expenses = cursor.fetchall()
+        
+        today = datetime.now().strftime('%Y-%m-%d')
+        return render_template('add_expense.html', user=user, today=today, recent_expenses=recent_expenses, expense=expense)
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('login'))
+    finally:
+        cursor.close()
+
+@app.route('/delete_expense/<int:user_id>/<int:id>', methods=['POST'])
+def delete_expense(user_id, id):
+    if not is_logged_in() or session['user_id'] != user_id:
+        flash('Please log in to delete expense.', 'danger')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            flash('User not found.', 'danger')
+            return redirect(url_for('login'))
+        
+        cursor.execute("DELETE FROM transactions WHERE id=%s AND user_id=%s AND transaction_type='expense'", (id, user_id))
+        mysql.connection.commit()
+        
+        flash('Expense deleted successfully!', 'success')
+        return redirect(url_for('add_expense', user_id=user_id))
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('add_expense', user_id=user_id))
+    finally:
+        cursor.close()
+       
 if __name__ == '__main__':
     app.run(debug=True)

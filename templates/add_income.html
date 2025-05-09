@@ -12,7 +12,6 @@ body {
 .card {
             border: none;
             border-radius: 20px;
-            background: #fff;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
             transition: transform 0.3s ease;
 }
@@ -55,7 +54,7 @@ body {
             transform: scale(1.05);
 }
 .income-card {
-        background-color: #e8f0fe;
+       
         border-radius: 10px;
         padding: 15px;
         margin-top: 20px;
@@ -70,7 +69,7 @@ body {
 </style>
 <div class="container mt-5 d-flex justify-content-center">
     <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
-            <h2 class="text-center mb-4 fade-in" style="color: #333; font-size: 2.5rem;">
+            <h2 class="text-center mb-4 fade-in" style=" font-size: 2.5rem;">
             <img src="{{ url_for('static', filename='assets/logow.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income</h2>
         <form id="income-form" method="POST" action="{{url_for('add_income',user_id=user.id)}}">
             <div class="mb-3">
@@ -97,7 +96,7 @@ body {
                 <label for="description" class="form-label">Description</label>
                 <input type="text" id="description" value="{{income.description if income else ''}}" name="description" class="form-control" placeholder="Add a note (e.g., To Pay)" >
         </div>  
-        <input type="hidden" id="income-id" name="income_id" value="{{ income.id if income else ''}}">
+        <input type="hidden" id="id" name="id" value="{{ income.id if income else '' }}">
 
         <button type="submit" id="action-btn" class="btn btn-primary w-100">{{ 'Update Income' if income else 'Add Income' }}</button>
         </form>

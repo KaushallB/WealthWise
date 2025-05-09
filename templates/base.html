@@ -35,7 +35,7 @@
                                 <a href="{{ url_for('add_income', user_id=user['id']) }}" class="sidebar-link">Add Income</a>
                             </li>
                             <li class="sidebar-item">
-                                <a href="#" class="sidebar-link">Add Expenses</a>
+                                 <a href="{{ url_for('add_expense', user_id=user['id']) }}" class="sidebar-link">Add Expenses</a>
                             </li>
                             <li class="sidebar-item">
                                 <a href="#" class="sidebar-link">View Reports</a>

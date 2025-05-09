@@ -16,7 +16,7 @@
             </div>
             <form id="chat-form">
                 <div class="input-group mb-3">
-                    <input type="text" id="message" class="form-control" placeholder="Ask about budgeting or expenses..." required style="border-color: #3498db; font-size: 1.1rem; border-radius: 5px;">
+                    <input type="text" id="message" class="form-control" placeholder="Ask about budgeting or expenses..." required style="border-color: #3498db; font-size: 1.1rem; border-radius: 5px;" value="{{ prefilled_question if prefilled_question else '' }}">
                     <input type="hidden" id="context" name="context" value="">
                     <button type="submit" class="btn btn-primary" style="background-color: #3498db; border-color: #3498db; font-size: 1.1rem; padding: 10px 20px; border-radius: 5px;">Send</button>
                 </div>
@@ -43,7 +43,7 @@
         const chatContainer = document.getElementById('chat-container');
         const userMessage = document.createElement('div');
         userMessage.className = 'user-message';
-        userMessage.style.cssText = 'text-align: right: ; margin: 10px 0; font-size: 1.1rem; background-color: #e8f0fe; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
+        userMessage.style.cssText = 'text-align: right: ; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
         userMessage.textContent = message;
         chatContainer.appendChild(userMessage);
         chatContainer.scrollTop = chatContainer.scrollHeight;
