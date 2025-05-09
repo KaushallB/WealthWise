@@ -1,288 +1,174 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <title>Dashboard</title>
-</head>
-<body>
-    <div class="wrapper">
-        <aside id="sidebar">
-            <div class="h-100">
-                <div class="sidebar-logo">
-                    <a href="#">WealthWise</a>   
-                </div>
-                <ul class="sidebar-nav">
-                    <li class="sidebar-header">
-                        User Control Panel
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{{url_for('dashboard', user_id=user['id'])}}" class="sidebar-link">
-                            <i class="bi bi-speedometer2"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="#" class="sidebar-link collapsed" data-bs-target="#transactions" data-bs-toggle="collapse" aria-expanded="false" onclick="console.log('Transactions clicked')">
-                            <i class="bi bi-coin"></i>
-                            Transactions
-                        </a>
-                        <ul id="transactions" class="sidebar-dropdown list-unstyled collapse" data-bs-parent="#sidebar">
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link">Add Income</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link">Add Expenses</a>
-                            </li>
-                            <li class="sidebar-item">
-                                <a href="#" class="sidebar-link">View Reports</a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{{url_for('chatbot', user_id=user.id)}}" class="sidebar-link">
-                            <i class="bi bi-robot"></i>
-                            Chatbot
-                        </a>
-                    </li>
-                    <li class="sidebar-item">
-                        <a href="{{url_for('logout')}}" class="sidebar-link">
-                            <i class="bi bi-box-arrow-left"></i>
-                            Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </aside>
-        <div class="main">
-            <nav class="navbar navbar-expand px-3 border-bottom">
-                <button class="btn" id="sidebar-toggle" type="button">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse navbar">
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a href="#" class="theme-toggle">
-                                <i class="bi bi-brightness-low"></i>
-                                <i class="bi bi-moon-fill"></i>
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a href="#" data-bs-toggle="dropdown" class="nav-icon pe-md-0">
-                                <img src="{{url_for('static', filename='assets/profile.jpg')}}" class="avatar img-fluid round" alt="Profilepic">
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a href="{{url_for('logout')}}" class="dropdown-item">Logout</a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-            <main class="content px-3 py-2">
-                <div class="container">
-                    <div class="mb-3 text-center">
-                        <h5>User Dashboard</h5>
-                        <h3 class="welcome-text mb-0">Welcome, {{user['full_name']}}</h3>
-                    </div>
-                    <!-- Flash Messages -->
-                    {% with messages=get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class='alert alert-{{category}} alert-dismissible fade show' role='alert'>
-                                    {{message}}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-                    
-                    <!-- First Row: Total Income, Total Expenses, 50/30/20 Budget Allocation -->
-                    <div class="row g-3 mb-3 justify-content-center">
-                        <div class="col-12 col-md-4 col-lg-3">
-                            <div class="card p-2 bg-success text-white text-center">
-                                <div class="card-title fs-6">Total Income</div>
-                                <h4 class="mb-1 text-white">Rs {{total_income|round(2)}}</h4>
-                                <small>Monthly After-Tax Income</small>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4 col-lg-3">
-                            <div class="card p-2 bg-danger text-white text-center">
-                                <div class="card-title fs-6">Total Expenses</div>
-                                <h4 class="mb-1 text-white">Rs {{total_exp|round(2)}}</h4>
-                                <small>This Month</small>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4 col-lg-4">
-                            <div class="card p-2 bg-yellow" style="background:#EFB11D;">
-                                <div class="card-title text-center fs-6 text-white fw-600">50/30/20 Budget Allocation</div>
-                                <div class="row g-2 justify-content-center">
-                                    <div class="col-4 bg-purple text-white p-2" style="background:#a084e8;">
-                                        <h6 class="mb-0">Needs ({{budget['needs_percent']|default(50.00)}}%)</h6>
-                                        <p class="mb-0">Rs {{total_income*(budget['needs_percent']|default(50.00))/100|round(2)}}</p>
-                                    </div>
-                                    <div class="col-4 bg-blue text-white p-2" style="background:#4056A1;">
-                                        <h6 class="mb-0">Wants ({{budget['wants_percent']|default(30.00)}}%)</h6>
-                                        <p class="mb-0">Rs {{(total_income*(budget['wants_percent']|default(30.00))/100)|round(2)}}</p>
-                                    </div>
-                                    <div class="col-4 bg-info text-white p-2">
-                                        <h6 class="mb-0">Savings ({{budget['savings_percent']|default(20.00)}}%)</h6>
-                                        <p class="mb-0">Rs {{(total_income*(budget['savings_percent']|default(20.00))/100)|round(2)}}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Second Row: Pie Chart (Left) and Spending Cards (Right) -->
-                    <div class="row g-3 mb-3 justify-content-center">
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="card p-2">
-                                <div class="card-title text-center fs-6">50/30/20 Budget Breakdown</div>
-                                <canvas id="budgetPieChart" style="max-height: 300px;"></canvas>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6 col-lg-4 justify-content-center">
-                            <div class="d-flex flex-column gap-3">
-                                <div class="card p-2 bg-pink text-white text-center" style="background:#E7717d;">
-                                    <div class="card-title fs-6">Needs Spending</div>
-                                    <h5 class="mb-1">Rs {{needs_spent|round(2)}} / Rs {{(total_income * (budget['needs_percent']|default(50.00)) / 100)|round(2)}}</h5>
-                                    <!-- CHANGED: Prevent division by zero for needs percentage -->
-                                    <small>
-                                        {% if total_income > 0 and budget['needs_percent']|default(50.00) > 0 %}
-                                            {{ (needs_spent / (total_income * (budget['needs_percent']|default(50.00)) / 100) * 100)|round(2) }}% of Needs Budget Used
-                                        {% else %}
-                                            0.0% of Needs Budget Used
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                <div class="card p-2 bg-soft text-white text-center" style="background:#EDC7B7;">
-                                    <div class="card-title fs-6">Wants Spending</div>
-                                    <h5 class="mb-1">Rs {{wants_spent|round(2)}} / Rs {{(total_income * (budget['wants_percent']|default(30.00)) / 100)|round(2)}}</h5>
-                                    <!-- CHANGED: Prevent division by zero for wants percentage -->
-                                    <small>
-                                        {% if total_income > 0 and budget['wants_percent']|default(30.00) > 0 %}
-                                            {{ (wants_spent / (total_income * (budget['wants_percent']|default(30.00)) / 100) * 100)|round(2) }}% of Wants Budget Used
-                                        {% else %}
-                                            0.0% of Wants Budget Used
-                                        {% endif %}
-                                    </small>
-                                </div>
-                                <div class="card p-2 bg-success text-white text-center">
-                                    <div class="card-title fs-6">Savings Progress</div>
-                                    <h5 class="mb-1">Rs {{savings_saved|round(2)}} / Rs {{(total_income * (budget['savings_percent']|default(20.00)) / 100)|round(2)}}</h5>
-                                    <!-- CHANGED: Prevent division by zero for savings percentage -->
-                                    <small>
-                                        {% if total_income > 0 and budget['savings_percent']|default(20.00) > 0 %}
-                                            {{ (savings_saved / (total_income * (budget['savings_percent']|default(20.00)) / 100) * 100)|round(2) }}% of Savings Goal Met
-                                        {% else %}
-                                            0.0% of Savings Goal Met
-                                        {% endif %}
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Third Row: Bar Chart for Financial Overview -->
-                    <div class="row g-5 mb-3">
-                        <div class="col-12 col-md-8 col-lg-6 mx-auto">
-                            <div class="card p-2">
-                                <div class="card-title text-center fs-6">Financial Overview</div>
-                                <canvas id="financialBarChart" style="max-height: 300px;"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - WealthWise{% endblock %}
+
+{% block main_content %}
+<!-- First Row: Total Income, Total Expenses, 50/30/20 Budget Allocation -->
+<div class="row g-3 mb-3 justify-content-center">
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-success text-white text-center">
+            <div class="card-title fs-6">Total Income</div>
+            <h4 class="mb-1 text-white">Rs {{ total_income|default(0)|round(2) }}</h4>
+            <small>Monthly After-Tax Income</small>
         </div>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-HjW8v0j/fcO5z3XqI2q3Xv7lX5u5f7f5g5h5i5j5k5l5m5n5o5p5q5r5s5t5u5v5w5x5y5z" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script>
-        // Pie chart for 50/30/20 budget allocation
-        const piechart = document.getElementById('budgetPieChart').getContext('2d');
-        new Chart(piechart, {
-            type: 'pie',
-            data: {
-                labels: ['Needs ({{budget['needs_percent']|default(50.00)}}%)',
-                         'Wants ({{budget['wants_percent']|default(30.00)}}%)', 
-                         'Savings ({{budget['savings_percent']|default(20.00)}}%)'],
-                datasets: [{
-                    data: [{{budget['needs_percent']|default(50.00)}},
-                           {{budget['wants_percent']|default(30.00)}},
-                           {{budget['savings_percent']|default(20.00)}}],
-                    backgroundColor: ['#a084e8', '#4056A1', '#17a2b8']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return `${tooltipItem.label}: ${tooltipItem.raw}%`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        // Bar chart for financial overview
-        const barchart = document.getElementById('financialBarChart').getContext('2d');
-        new Chart(barchart, {
-            type: 'bar',
-            data: {
-                labels: ['Total Income', 'Total Expenses', 'Needs Spent', 'Wants Spent', 'Savings Saved'],
-                datasets: [{
-                    label: 'Amount (Rs)',
-                    data: [{{ total_income | default(0) }}, {{ total_exp | default(0) }}, {{ needs_spent | default(0) }}, {{ wants_spent | default(0) }}, {{ savings_saved | default(0) }}],
-                    backgroundColor: ['#28a745', '#dc3545', '#DA7B93', '#EDC7B7', '#17a2b8']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Amount (Rs)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Category'
-                        }
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-danger text-white text-center">
+            <div class="card-title fs-6">Total Expenses</div>
+            <h4 class="mb-1 text-white">Rs {{ total_exp|default(0)|round(2) }}</h4>
+            <small>This Month</small>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg-4">
+        <div class="card p-2 bg-yellow" style="background:#EFB11D;">
+            <div class="card-title text-center fs-6 text-white fw-600">50/30/20 Budget Allocation</div>
+            <div class="row g-2 justify-content-center">
+                <div class="col-4 bg-purple text-white p-2" style="background:#a084e8;">
+                    <h6 class="mb-0">Needs ({{ budget['needs_percent']|default(50.00) }}%)</h6>
+                    <p class="mb-0">Rs {{ (total_income|default(0) * (budget['needs_percent']|default(50.00)) / 100)|round(2) }}</p>
+                </div>
+                <div class="col-4 bg-blue text-white p-2" style="background:#4056A1;">
+                    <h6 class="mb-0">Wants ({{ budget['wants_percent']|default(30.00) }}%)</h6>
+                    <p class="mb-0">Rs {{ (total_income|default(0) * (budget['wants_percent']|default(30.00)) / 100)|round(2) }}</p>
+                </div>
+                <div class="col-4 bg-info text-white p-2">
+                    <h6 class="mb-0">Savings ({{ budget['savings_percent']|default(20.00) }}%)</h6>
+                    <p class="mb-0">Rs {{ (total_income|default(0) * (budget['savings_percent']|default(20.00)) / 100)|round(2) }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Second Row: Pie Chart (Left) and Spending Cards (Right) -->
+<div class="row g-3 mb-3 justify-content-center">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="card p-2">
+            <div class="card-title text-center fs-6">50/30/20 Budget Breakdown</div>
+            <canvas id="budgetPieChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-4 justify-content-center">
+        <div class="d-flex flex-column gap-3">
+            <div class="card p-2 bg-pink text-white text-center" style="background:#E7717d;">
+                <div class="card-title fs-6">Needs Spending</div>
+                <h5 class="mb-1">Rs {{ needs_spent|default(0)|round(2) }} / Rs {{ (total_income|default(0) * (budget['needs_percent']|default(50.00)) / 100)|round(2) }}</h5>
+                <small>
+                    {% if total_income > 0 and budget['needs_percent']|default(50.00) > 0 %}
+                        {{ (needs_spent|default(0) / (total_income * (budget['needs_percent']|default(50.00)) / 100) * 100)|round(2) }}% of Needs Budget Used
+                    {% else %}
+                        0.0% of Needs Budget Used
+                    {% endif %}
+                </small>
+            </div>
+            <div class="card p-2 bg-soft text-white text-center" style="background:#EDC7B7;">
+                <div class="card-title fs-6">Wants Spending</div>
+                <h5 class="mb-1">Rs {{ wants_spent|default(0)|round(2) }} / Rs {{ (total_income|default(0) * (budget['wants_percent']|default(30.00)) / 100)|round(2) }}</h5>
+                <small>
+                    {% if total_income > 0 and budget['wants_percent']|default(30.00) > 0 %}
+                        {{ (wants_spent|default(0) / (total_income * (budget['wants_percent']|default(30.00)) / 100) * 100)|round(2) }}% of Wants Budget Used
+                    {% else %}
+                        0.0% of Wants Budget Used
+                    {% endif %}
+                </small>
+            </div>
+            <div class="card p-2 bg-success text-white text-center">
+                <div class="card-title fs-6">Savings Progress</div>
+                <h5 class="mb-1">Rs {{ savings_saved|default(0)|round(2) }} / Rs {{ (total_income|default(0) * (budget['savings_percent']|default(20.00)) / 100)|round(2) }}</h5>
+                <small>
+                    {% if total_income > 0 and budget['savings_percent']|default(20.00) > 0 %}
+                        {{ (savings_saved|default(0) / (total_income * (budget['savings_percent']|default(20.00)) / 100) * 100)|round(2) }}% of Savings Goal Met
+                    {% else %}
+                        0.0% of Savings Goal Met
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Third Row: Bar Chart for Financial Overview -->
+<div class="row g-5 mb-3">
+    <div class="col-12 col-md-8 col-lg-6 mx-auto">
+        <div class="card p-2">
+            <div class="card-title text-center fs-6">Financial Overview</div>
+            <canvas id="financialBarChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Pie chart for 50/30/20 budget allocation
+    const piechart = document.getElementById('budgetPieChart').getContext('2d');
+    new Chart(piechart, {
+        type: 'pie',
+        data: {
+            labels: ['Needs ({{ budget['needs_percent']|default(50.00) }}%)',
+                     'Wants ({{ budget['wants_percent']|default(30.00) }}%)', 
+                     'Savings ({{ budget['savings_percent']|default(20.00) }}%)'],
+            datasets: [{
+                data: [{{ budget['needs_percent']|default(50.00) }},
+                       {{ budget['wants_percent']|default(30.00) }},
+                       {{ budget['savings_percent']|default(20.00) }}],
+                backgroundColor: ['#a084e8', '#4056A1', '#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 12 }
                     }
                 },
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return `Rs ${tooltipItem.raw}`;
-                            }
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `${tooltipItem.label}: ${tooltipItem.raw}%`;
                         }
                     }
                 }
             }
-        });
-    </script>
-</body>
-</html>
+        }
+    });
+    // Bar chart for financial overview
+    const barchart = document.getElementById('financialBarChart').getContext('2d');
+    new Chart(barchart, {
+        type: 'bar',
+        data: {
+            labels: ['Total Income', 'Total Expenses', 'Needs Spent', 'Wants Spent', 'Savings Saved'],
+            datasets: [{
+                label: 'Amount (Rs)',
+                data: [{{ total_income|default(0) }}, {{ total_exp|default(0) }}, {{ needs_spent|default(0) }}, {{ wants_spent|default(0) }}, {{ savings_saved|default(0) }}],
+                backgroundColor: ['#28a745', '#dc3545', '#DA7B93', '#EDC7B7', '#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Amount (Rs)' }
+                },
+                x: {
+                    title: { display: true, text: 'Category' }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(tooltipItem) {
+                            return `Rs ${tooltipItem.raw}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
