@@ -714,7 +714,7 @@ def visualize(user_id):
         df['Amount'] = df['Amount'].astype(float)
 
         # Save to Excel
-        excel_path = os.path.join('OfflineReports', 'reports', f'user_{user_id}_transactions.xlsx')
+        excel_path = os.path.join('OfflineReports', 'reports', f'user_{full_name}_transactions.xlsx')
         os.makedirs(os.path.dirname(excel_path), exist_ok=True)
         df.to_excel(excel_path, index=False)
 
