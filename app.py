@@ -133,9 +133,14 @@ def google_login():
                 VALUES (%s, %s, %s, %s, %s, %s)
             ''', (name, email, None, None, None, 'Google'))
             mysql.connection.commit()
+            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+            account = cursor.fetchone()
 
-        session['user_id'] = account['id']
-        flash(f"Logged in as {name} ({email}) via Google", "success")
+        if account:
+                session['user_id'] = account['id']
+                flash(f"Logged in as {name} ({email}) via Google", "success")
+                return redirect(url_for("dashboard", user_id=account['id']))
+       
         
         return redirect(url_for("dashboard", user_id=account['id']))
           
@@ -196,6 +201,10 @@ def dashboard(user_id):
         flash('Please log in to access the dashboard.', 'danger')
         return redirect(url_for('login'))
 
+    if session['user_id'] != user_id:
+        flash('You are not authorized to access this dashboard.', 'danger')
+        return redirect(url_for('logout'))
+    
     try:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
@@ -342,6 +351,9 @@ def chatbot(user_id):
     if not is_logged_in():
         flash('Please log in to access the chatbot.', 'danger')
         return redirect(url_for('login'))
+    if session['user_id'] != user_id:
+        flash('You are not authorized to access this chatbot.', 'danger')
+        return redirect(url_for('logout'))
     
     try:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
