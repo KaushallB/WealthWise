@@ -64,6 +64,18 @@
                 </button>
                 <div class="navbar-collapse navbar">
                     <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <form class="btn-toggle-group" method="POST" action="{{ url_for('switch_mode') }}">
+                                <input type="hidden" name="user_id" value="{{ user['id'] }}">
+                                <div class="btn-group" role="group">
+                                    <input type="radio" class="btn-check" name="mode" id="mode-personal" value="personal" {% if session.get('account_type', user.get('account_type', 'personal')) == 'personal' %}checked{% endif %} autocomplete="off" onchange="this.form.submit()">
+                                    <label class="btn btn-sm" for="mode-personal">Personal</label>
+
+                                    <input type="radio" class="btn-check" name="mode" id="mode-shop" value="shop" {% if session.get('account_type', user.get('account_type', 'shop')) == 'shop' %}checked{% endif %} autocomplete="off" onchange="this.form.submit()">
+                                    <label class="btn btn-sm" for="mode-shop">Business</label>
+                                </div>
+                            </form>
+                        </li>
                         <li class="nav-item dropdown">
                             <a href="#" class="theme-toggle">
                                 <i class="bi bi-brightness-low"></i>

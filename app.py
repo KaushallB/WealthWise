@@ -331,6 +331,28 @@ def dashboard(user_id):
     finally:
         cursor.close()
 
+@app.route('/switch_mode', methods=['POST'])
+def switch_mode():
+    if not is_logged_in():
+        flash('Please log in to switch modes.', 'danger')
+        return redirect(url_for('login'))
+    
+    user_id = request.form.get('user_id')
+    mode = request.form.get('mode')
+    
+    if mode in ['personal', 'shop']:
+        session['account_type'] = mode
+        # Optional: Sync with database
+        cursor = mysql.connection.cursor()
+        cursor.execute("UPDATE users SET account_type = %s WHERE id = %s", (mode, user_id))
+        mysql.connection.commit()
+        cursor.close()
+        flash(f'Switched to {mode.capitalize()} Finance mode.', 'success')
+    else:
+        flash('Invalid mode selected.', 'danger')
+    
+    return redirect(url_for('dashboard', user_id=user_id))
+
 # Initializing OLLAMA
 model = OllamaLLM(model="llama3")
 

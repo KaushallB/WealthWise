@@ -190,6 +190,23 @@ a.sidebar-link{
     margin-left: -264px;
 }
 
+ .btn-toggle-group .btn {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+            transition: all 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+}
+.btn-toggle-group .btn.active {
+            background-color: #c0392b;
+            border-color: #a93226;
+}
+.btn-toggle-group .btn:hover {
+            background-color: #c0392b;
+            border-color: #a93226;
+            transform: scale(1.05);
+}
 
 html[data-bs-theme="dark"] {
     --bs-primary: #efe2ba;
