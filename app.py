@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import seaborn as sns
 import os
+from datetime import datetime
 from decimal import Decimal
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
@@ -332,23 +333,8 @@ def dashboard(user_id):
 
 # Initializing OLLAMA
 model = OllamaLLM(model="llama3")
-template = """
-You are a financial advisor for WealthWise, a budgeting app small businesses and students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
-are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
-The average income of nepalese students is from around Rs 5000.00 to Rs 25000.00 and small business depends on their sales and profit ranging from Rs 15000.00 to 50000.00 or above.
-Use the user's financial data, and use nepali currency. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-If the query is unclear, suggest asking about budgeting or expenses.
 
-User's financial data: {financial_data}
 
-Conversation history: {context}
-
-Question: {question}
-
-Answer:
-"""
-prompt = ChatPromptTemplate.from_template(template)
-chain = prompt | model
 
 @app.route('/chatbot/<int:user_id>',methods=['GET','POST'])
 def chatbot(user_id):
@@ -364,6 +350,8 @@ def chatbot(user_id):
         cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
         user = cursor.fetchone()
         full_name=user['full_name']
+        management_type=user['account_type']
+        
         if not user:
             return jsonify('SELECT * FROM users WHERE id=%s',(user_id,))  #Jsonify uses AJAX for realtime communication without reloading page raicha
         
@@ -405,6 +393,43 @@ def chatbot(user_id):
             if not user_message:
                 return jsonify({'response': 'Please enter a message.'}), 400
             
+            if management_type == 'shop':
+                    template = """
+                    You are a financial advisor for WealthWise, a shop or business management and recommendation app for small businesses or shops in Nepal. 
+                    Provide concise, accurate business advice (under 100 words) in NPR, focusing on maximizing profit, optimizing inventory, and managing expenses and help improve sales and reduce expenses . 
+                    The average income of nepalese shops and businesses  depends on their sales and profit ranging from Rs 15000.00 to 50000.00 or above and also have to bear all the rent costs and other costs.
+                    Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
+                    If the query is unclear, suggest asking about profit strategies or expense management.
+
+                    User's financial data: {financial_data}
+
+                    Conversation history: {context}
+
+                    Question: {question}
+
+                    Answer:
+                    """
+                
+            if management_type=='personal':
+                        template = """
+                            You are a financial advisor for WealthWise, a finance management,adivising and recommendation app for  students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
+                            are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
+                            The average income of nepalese students is from around Rs 5000.00 to Rs 25000.00 and dont use $ and compare it with USD.
+                            Use the user's financial data, and use nepali currency. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
+                            If the query is unclear, suggest asking about budgeting or expenses.
+
+                            User's financial data: {financial_data}
+
+                            Conversation history: {context}
+
+                            Question: {question}
+
+                            Answer:
+                            """
+            
+            prompt = ChatPromptTemplate.from_template(template)
+            chain = prompt | model
+            
             responseofai=chain.invoke({
                 "financial_data":financial_data,
                 "context":context,
@@ -417,6 +442,7 @@ def chatbot(user_id):
     
     except Exception as e:
         return jsonify({'response': f'Error: {str(e)}'}), 500
+
     
 if __name__ == '__main__':
     app.run(debug=True)

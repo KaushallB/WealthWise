@@ -31,7 +31,7 @@ class RegistrationForm(FF):
     address=StringField('Address',validators=[DataRequired()])
     password=PasswordField('Password',validators=[DataRequired(),pw_val])
     confirm_pw=PasswordField('Confirm Password',validators=[DataRequired(),EqualTo('password')])
-    acc_type=SelectField('Choose your Account Type',choices=[('personal','Personal Finance Management'),('shop','Shop Management')],validators=[DataRequired()])
+    acc_type=SelectField('Choose your Account Type',choices=[('personal','Personal Finance Management'),('shop','Business / Shop Management')],validators=[DataRequired()])
     submit=SubmitField('Register')
 
 class LoginForm(FF):
