@@ -686,6 +686,72 @@ def delete_expense(user_id, id):
         return redirect(url_for('add_expense', user_id=user_id))
     finally:
         cursor.close()
+
+@app.route('/visualize/<int:user_id>')
+def visualize(user_id):
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  # Use DictCursor
+        # Fetch full_name for the user
+        cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
+        user = cursor.fetchone()
+        full_name = user['full_name']
+        
+        cursor = mysql.connection.cursor()
+        cursor.execute('''
+            SELECT date, category, amount, transaction_type 
+            FROM transactions 
+            WHERE user_id = %s
+        ''', (user_id,))
+        data = cursor.fetchall()
+
+        if not data:
+            flash('No transaction data available for visualization', 'warning')
+            return redirect(url_for('dashboard', user_id=user_id))
+
+        # Convert to DataFrame
+        df = pd.DataFrame(data, columns=['Date', 'Category', 'Amount', 'TransactionType'])
+        df['Date'] = pd.to_datetime(df['Date'])
+        df['Amount'] = df['Amount'].astype(float)
+
+        # Save to Excel
+        excel_path = os.path.join('OfflineReports', 'reports', f'user_{user_id}_transactions.xlsx')
+        os.makedirs(os.path.dirname(excel_path), exist_ok=True)
+        df.to_excel(excel_path, index=False)
+
+        # Visualization 1: Bar chart of expenses by category
+        expenses_df = df[df['TransactionType'] == 'expense']
+        if not expenses_df.empty:
+            plt.figure(figsize=(10, 6))
+            sns.barplot(x='Category', y='Amount', hue='Category', data=expenses_df, estimator=sum)
+            plt.title(f"Expenses by Category for {full_name}")
+            plt.xlabel("Category")
+            plt.ylabel("Amount Spent (Rs)")
+            plt.xticks(rotation=45)
+            chart_path = os.path.join('OfflineReports', 'charts', f'user_{full_name}_expenses_by_category.png')
+            os.makedirs(os.path.dirname(chart_path), exist_ok=True)
+            plt.savefig(chart_path)
+            plt.close()
+
+        # Visualization 2: Line chart of transactions over time
+        # Visualization 2: Scatter plot of transactions over time
+        plt.figure(figsize=(12, 6))
+        sns.scatterplot(x='Date', y='Amount', hue='TransactionType', style='TransactionType', size='Amount', data=df)
+        plt.title(f"Transactions Over Time for {full_name}")
+        plt.xlabel("Date")
+        plt.ylabel("Amount (Rs)")
+        plt.xticks(rotation=45)
+        chart_path = os.path.join('OfflineReports', 'charts', f'user_{full_name}_transactions_over_time.png')
+        os.makedirs(os.path.dirname(chart_path), exist_ok=True)
+        plt.savefig(chart_path)
+        plt.close()
+
+        flash('Visualizations and Excel file saved successfully', 'success')
+        return redirect(url_for('dashboard', user_id=user_id))
+    except Exception as e:
+        flash(f'Error generating visualizations: {e}', 'danger')
+        return redirect(url_for('dashboard', user_id=user_id))
+    finally:
+        cursor.close()
        
 if __name__ == '__main__':
     app.run(debug=True)
