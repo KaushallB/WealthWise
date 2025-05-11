@@ -714,7 +714,7 @@ def visualize(user_id):
         df['Amount'] = df['Amount'].astype(float)
 
         # Save to Excel
-        excel_path = os.path.join('OfflineReports', 'reports', f'user_{full_name}_transactions.xlsx')
+        excel_path = os.path.join('OfflineReports', 'reports', f'{full_name}_transactions.xlsx')
         os.makedirs(os.path.dirname(excel_path), exist_ok=True)
         df.to_excel(excel_path, index=False)
 
@@ -727,20 +727,20 @@ def visualize(user_id):
             plt.xlabel("Category")
             plt.ylabel("Amount Spent (Rs)")
             plt.xticks(rotation=45)
-            chart_path = os.path.join('OfflineReports', 'charts', f'user_{full_name}_expenses_by_category.png')
+            chart_path = os.path.join('OfflineReports', 'charts', f'{full_name}_expenses_by_category.png')
             os.makedirs(os.path.dirname(chart_path), exist_ok=True)
             plt.savefig(chart_path)
             plt.close()
 
         # Visualization 2: Line chart of transactions over time
         # Visualization 2: Scatter plot of transactions over time
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(10, 6))
         sns.scatterplot(x='Date', y='Amount', hue='TransactionType', style='TransactionType', size='Amount', data=df)
         plt.title(f"Transactions Over Time for {full_name}")
         plt.xlabel("Date")
         plt.ylabel("Amount (Rs)")
         plt.xticks(rotation=45)
-        chart_path = os.path.join('OfflineReports', 'charts', f'user_{full_name}_transactions_over_time.png')
+        chart_path = os.path.join('OfflineReports', 'charts', f'{full_name}_transactions_over_time.png')
         os.makedirs(os.path.dirname(chart_path), exist_ok=True)
         plt.savefig(chart_path)
         plt.close()

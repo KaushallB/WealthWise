@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm as FF
-from wtforms import StringField,IntegerField,PasswordField,SelectField,SubmitField
+from wtforms import StringField,IntegerField,PasswordField,SelectField,SubmitField,DateField,FloatField
 from wtforms.validators import DataRequired,EqualTo,ValidationError,Email
-import re
 
 #Validations made by me
 def name_val(form,field):
@@ -16,6 +15,11 @@ def pw_val(form, field):
     print("Password entered:", field.data)  # Debugging line
     if not re.match("^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", field.data):
         raise ValidationError("Password must be at least 8 characters with uppercase, lowercase, digits, and special characters")
+
+def positive_amount(form, field):
+    if not isinstance(field.data, (int, float)) or field.data <= 0:
+        raise ValidationError("Amount must be a positive number")
+
     
 def validate_email_or_phone(self, field):
         email_pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
