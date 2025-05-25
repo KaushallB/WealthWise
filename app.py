@@ -689,9 +689,14 @@ def delete_expense(user_id, id):
 
 @app.route('/visualize/<int:user_id>')
 def visualize(user_id):
+    if not is_logged_in() or session['user_id'] != user_id:
+        flash('Please log in to generate reports.', 'danger')
+        return redirect(url_for('logout'))
+    
     try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  # Use DictCursor
-        # Fetch full_name for the user
+        
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  # Using DictCursor
+        # Fetching full_name for the user
         cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
         user = cursor.fetchone()
         full_name = user['full_name']
@@ -708,7 +713,7 @@ def visualize(user_id):
             flash('No transaction data available for visualization', 'warning')
             return redirect(url_for('dashboard', user_id=user_id))
 
-        # Convert to DataFrame
+        # Converting to DataFrame
         df = pd.DataFrame(data, columns=['Date', 'Category', 'Amount', 'TransactionType'])
         df['Date'] = pd.to_datetime(df['Date'])
         df['Amount'] = df['Amount'].astype(float)
@@ -731,6 +736,7 @@ def visualize(user_id):
             os.makedirs(os.path.dirname(chart_path), exist_ok=True)
             plt.savefig(chart_path)
             plt.close()
+            
 
         # Visualization 2: Line chart of transactions over time
         # Visualization 2: Scatter plot of transactions over time
@@ -747,9 +753,11 @@ def visualize(user_id):
 
         flash('Visualizations and Excel file saved successfully', 'success')
         return redirect(url_for('dashboard', user_id=user_id))
+    
     except Exception as e:
         flash(f'Error generating visualizations: {e}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
+    
     finally:
         cursor.close()
        

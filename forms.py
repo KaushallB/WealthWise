@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm as FF
 from wtforms import StringField,IntegerField,PasswordField,SelectField,SubmitField,DateField,FloatField
 from wtforms.validators import DataRequired,EqualTo,ValidationError,Email
+import re
 
 #Validations made by me
 def name_val(form,field):

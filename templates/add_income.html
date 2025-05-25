@@ -70,7 +70,7 @@ body {
 <div class="container mt-5 d-flex justify-content-center">
     <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
             <h2 class="text-center mb-4 fade-in" style=" font-size: 2.5rem;">
-            <img src="{{ url_for('static', filename='assets/logow.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income</h2>
+            <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income</h2>
         <form id="income-form" method="POST" action="{{url_for('add_income',user_id=user.id)}}">
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount (Rs)</label>
