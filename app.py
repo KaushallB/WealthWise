@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify,session
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
-from forms import RegistrationForm, LoginForm
+from forms import RegistrationForm, LoginForm, ForgotPasswordForm, ResetPasswordForm
 import MySQLdb.cursors
 import re
 from flask_dance.contrib.google import make_google_blueprint, google
@@ -10,7 +10,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import seaborn as sns
 import os
-from datetime import datetime
+from datetime import datetime,timedelta
 from decimal import Decimal
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
@@ -112,8 +112,7 @@ def login():
             mysql.connection.rollback()
 
     return render_template('login.html', form=log)
-
-@app.route("/google_login")
+"""
 def google_login():
     if not google.authorized:
         return redirect(url_for("google.login"))
@@ -147,6 +146,86 @@ def google_login():
           
     flash("Failed to log in via Google", "danger")
     return redirect(url_for("login"))
+"""
+@app.route('/forgot_password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        try:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+            user = cursor.fetchone()
+            cursor.close()
+
+            if user:
+                # Generating a simple token (user ID + timestamp)
+                token = f"{user['id']}-{int(datetime.now().timestamp())}"
+                reset_url = url_for('reset_password', token=token, _external=True)
+                session['reset_token'] = {'token': token, 'email': email, 'expires': (datetime.now() + timedelta(minutes=1)).timestamp()}
+
+                # Sending reset email via Mailpit using the correct template
+                try:
+                    msg = Message("Password Reset Request", recipients=[email])
+                    msg.html = render_template("password_reset_email.html", full_name=user['full_name'], reset_url=reset_url)
+                    mail.send(msg)
+                    flash('A password reset link has been sent to your email.', 'success')
+                except Exception as email_error:
+                    flash(f'Error sending email: {str(email_error)}', 'danger')
+                    raise  # Re-raise for full stack trace
+            else:
+                flash('Email not found. Please register first.', 'danger')
+                return redirect(url_for('registration'))
+
+        except Exception as e:
+            flash(f'Error occurred: {str(e)}', 'danger')
+            mysql.connection.rollback()
+
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    # Validate token
+    reset_data = session.get('reset_token')
+    if not reset_data or reset_data['token'] != token or datetime.now().timestamp() > reset_data['expires']:
+        flash('Invalid or expired reset link.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    form = ResetPasswordForm()
+    # Fetch the current password hash for the user
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT password_hash FROM users WHERE email = %s', (reset_data['email'],))
+        user = cursor.fetchone()
+        if user and 'password_hash' in user:
+            form.meta = {'current_password_hash': user['password_hash']}
+        cursor.close()
+    except Exception as e:
+        flash(f'Error fetching user data: {str(e)}', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if form.validate_on_submit():
+        try:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            hashed_password = enc.generate_password_hash(form.new_password.data).decode('utf-8')
+            cursor.execute('UPDATE users SET password_hash = %s WHERE email = %s', (hashed_password, reset_data['email']))
+            mysql.connection.commit()
+            cursor.close()
+
+            # Clear the reset token
+            session.pop('reset_token', None)
+            flash('Your password has been reset successfully. Please log in.', 'success')
+            return redirect(url_for('login'))
+
+        except Exception as e:
+            flash(f'Error occurred: {str(e)}', 'danger')
+            mysql.connection.rollback()
+
+        return redirect(url_for('reset_password', token=token))
+
+    return render_template('reset_password.html', form=form, token=token)
 
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
