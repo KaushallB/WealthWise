@@ -139,11 +139,11 @@
     new Chart(barchart, {
         type: 'bar',
         data: {
-            labels: ['Total Income', 'Total Expenses', 'Needs Spent', 'Wants Spent', 'Savings Saved'],
+            labels: ['Total Income', 'Total Expenses', 'Needs Spent', 'Wants Spent'],
             datasets: [{
                 label: 'Amount (Rs)',
                 data: [{{ total_income|default(0) }}, {{ total_exp|default(0) }}, {{ needs_spent|default(0) }}, {{ wants_spent|default(0) }}, {{ savings_saved|default(0) }}],
-                backgroundColor: ['#28a745', '#dc3545', '#DA7B93', '#EDC7B7', '#17a2b8']
+                backgroundColor: ['#28a745', '#dc3545', '#DA7B93', '#EDC7B7']
             }]
         },
         options: {

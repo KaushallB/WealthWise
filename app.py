@@ -42,7 +42,7 @@ google_client_id="666426612022-ncopuubkoer69h1hrq3qkig6sjdjvtfg.apps.googleuserc
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
-app.config['MYSQL_DB'] = 'wealthwise'
+app.config['MYSQL_DB'] = 'wealthwisenew'
 mysql = MySQL(app)
 
 # Mailpit 
@@ -251,7 +251,7 @@ def registration():
                 hash_pw = enc.generate_password_hash(pw).decode('utf-8')
                 cursor.execute('''
                     INSERT INTO users (full_name, email, phone_number, address, password_hash)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s)
                 ''', (full_name, email, phone_num, address, hash_pw))
 
                 mysql.connection.commit()
@@ -410,7 +410,7 @@ def dashboard(user_id):
         cursor.close()
 
 # Initializing OLLAMA
-model = OllamaLLM(model="llama3")
+model = OllamaLLM(model="llama3",use_gpu=False)
 
 
 
@@ -428,7 +428,6 @@ def chatbot(user_id):
         cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
         user = cursor.fetchone()
         full_name = user['full_name']
-       
         
         if not user:
             return jsonify({'response': 'User not found.'}), 400
@@ -459,7 +458,7 @@ def chatbot(user_id):
                 elif category == 'wants':
                     wants_spent += amount
         
-        # Use NPR (Nepali Rupees) as specified in the template
+        # Use NPR (Nepali Rupees) as specified
         financial_data = (
             f"Total Income: Rs {float(total_income):.2f}, "
             f"Needs Spent: Rs {float(needs_spent):.2f} (Budget: 50%), "
@@ -473,39 +472,22 @@ def chatbot(user_id):
             if not user_message:
                 return jsonify({'response': 'Please enter a message.'}), 400
             
-            if management_type == 'shop':
-                template = """
-                You are a financial advisor for WealthWise, a shop or business management and recommendation app for small businesses or shops in Nepal. 
-                Provide concise, accurate business advice (under 100 words) in NPR, focusing on maximizing profit, optimizing inventory, and managing expenses and help improve sales and reduce expenses . 
-                The average income of Nepalese shops and businesses depends on their sales and profit ranging from Rs 15000.00 to 50000.00 or above and also have to bear all the rent costs and other costs.
-                Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-                If the query is unclear, suggest asking about profit strategies or expense management.
+            # Default to 'personal' since account_type is removed
+            template = """
+            You are a financial advisor for WealthWise, a finance management, advising, and recommendation app for students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
+            Needs are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
+            The average income of Nepalese students is from around Rs 5000.00 to Rs 25000.00.
+            Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
+            If the query is unclear, suggest asking about budgeting or expenses.
 
-                User's financial data: {financial_data}
+            User's financial data: {financial_data}
 
-                Conversation history: {context}
+            Conversation history: {context}
 
-                Question: {question}
+            Question: {question}
 
-                Answer:
-                """
-            
-            if management_type == 'personal':
-                template = """
-                You are a financial advisor for WealthWise, a finance management, advising and recommendation app for students in Nepal. Provide concise, accurate financial advice (under 100 words) in NPR, focusing on budgeting and differentiating needs vs. wants. 
-                Needs are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
-                The average income of Nepalese students is from around Rs 5000.00 to Rs 25000.00.
-                Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-                If the query is unclear, suggest asking about budgeting or expenses.
-
-                User's financial data: {financial_data}
-
-                Conversation history: {context}
-
-                Question: {question}
-
-                Answer:
-                """
+            Answer:
+            """
             
             prompt = ChatPromptTemplate.from_template(template)
             chain = prompt | model
@@ -814,6 +796,60 @@ def visualize(user_id):
         flash(f'Error generating visualizations: {e}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
     
+    finally:
+        cursor.close()
+        
+@app.route('/view_reports/<int:user_id>')
+def view_reports(user_id):
+    if not is_logged_in():
+        flash('Please log in to view reports.', 'danger')
+        return redirect(url_for('login'))
+    if session['user_id'] != user_id:
+        flash('You are not authorized to view these reports.', 'danger')
+        return redirect(url_for('logout'))
+    
+    try:
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('SELECT * FROM users WHERE id=%s', (user_id,))
+        user = cursor.fetchone()
+        
+        if not user:
+            flash('User not found', 'danger')
+            return redirect(url_for('login'))
+        
+        cursor.execute('''SELECT transaction_type, category, amount, date, description 
+                         FROM transactions 
+                         WHERE user_id=%s 
+                         ORDER BY date DESC''', (user_id,))
+        transactions = cursor.fetchall()
+        
+        total_income = Decimal('0.0')
+        total_exp = Decimal('0.0')
+        
+        for transaction in transactions:
+            amount = transaction['amount']
+            if transaction['transaction_type'] == 'income':
+                total_income += amount
+            elif transaction['transaction_type'] == 'expense':
+                total_exp += amount
+        
+        # Prepare transactions data compatible with the template's JavaScript
+        transactions_list = [
+            {
+                'date': transaction['date'].strftime('%Y-%m-%d'),
+                'type': transaction['transaction_type'],
+                'category': transaction['category'],
+                'amount': float(transaction['amount']),
+                'description': transaction['description'] or ''
+            } for transaction in transactions
+        ]
+        
+        return render_template('view_reports.html', user=user, total_income=total_income, total_exp=total_exp, transactions=transactions_list)
+    
+    except Exception as e:
+        flash(f"Error loading reports: {e}", 'danger')
+        mysql.connection.rollback()
+        return redirect(url_for('dashboard', user_id=user_id))
     finally:
         cursor.close()
        

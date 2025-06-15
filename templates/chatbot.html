@@ -11,8 +11,9 @@
             </h2>
             <div id="chat-container" class="chat-container" style="max-height: 600px; overflow-y: auto; border: 2px solid #3498db; padding: 15px; margin-bottom: 15px; border-radius: 10px;">
                 <div class="bot-message" style="text-align: left; margin: 10px 0; font-size: 1.1rem; animation: slideIn 1s ease-out;">
-                    Hello {{ full_name }}! I am the WealthWise Financial Advisor. Your Personal Financial Companion,Ask me about financial advice, categorizing needs and wants, managing your expenses or anything you want me to help you on about Finance!
+                    Hello {{ full_name }}! I am the WealthWise Financial Advisor. Your Personal Financial Companion, Ask me about financial advice, categorizing needs and wants, managing your expenses, or anything you want me to help you with regarding finance!
                 </div>
+                <!-- Remove the static typing-indicator from HTML -->
             </div>
             <form id="chat-form">
                 <div class="input-group mb-3">
@@ -32,6 +33,7 @@
 {% block scripts %}
 <script>
     let context = '';
+
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const messageInput = document.getElementById('message');
@@ -39,37 +41,61 @@
         const message = messageInput.value.trim();
         if (!message) return;
 
-        // Display user message
         const chatContainer = document.getElementById('chat-container');
+
+        // Clear input immediately
+        messageInput.value = '';
+
+        // Create and display user message
         const userMessage = document.createElement('div');
         userMessage.className = 'user-message';
-        userMessage.style.cssText = 'text-align: right: ; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
+        userMessage.style.cssText = 'text-align: right; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
         userMessage.textContent = message;
         chatContainer.appendChild(userMessage);
         chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        // Clear input
-        messageInput.value = '';
+        // Create and show typing indicator on a new line
+        const typingIndicator = document.createElement('div');
+        typingIndicator.className = 'typing-indicator';
+        typingIndicator.style.cssText = 'text-align: left; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: block;'; // 'display: block' for new line
+        typingIndicator.innerHTML = '<span class="typing-dots"></span> Typing';
+        chatContainer.appendChild(typingIndicator);
 
         // Send message to server
-        const response = await fetch('{{ url_for("chatbot", user_id=user.id) }}', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `message=${encodeURIComponent(message)}&context=${encodeURIComponent(context)}`
-        });
-        const data = await response.json();
+        try {
+            const response = await fetch('{{ url_for("chatbot", user_id=user.id) }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `message=${encodeURIComponent(message)}&context=${encodeURIComponent(context)}`
+            });
+            const data = await response.json();
 
-        // Display bot response
-        const botMessage = document.createElement('div');
-        botMessage.className = 'bot-message';
-        botMessage.style.cssText = 'text-align: left; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
-        botMessage.textContent = data.response;
-        chatContainer.appendChild(botMessage);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+            // Remove typing indicator
+            chatContainer.removeChild(typingIndicator);
 
-        // Update context
-        context = data.context || '';
-        contextInput.value = context;
+            // Display bot response
+            const botMessage = document.createElement('div');
+            botMessage.className = 'bot-message';
+            botMessage.style.cssText = 'text-align: left; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out;';
+            botMessage.textContent = data.response;
+            chatContainer.appendChild(botMessage);
+
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Update context
+            context = data.context || '';
+            contextInput.value = context;
+        } catch (error) {
+            // Remove typing indicator on error
+            chatContainer.removeChild(typingIndicator);
+
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'bot-message';
+            errorMessage.style.cssText = 'text-align: left; margin: 10px 0; font-size: 1.1rem; padding: 8px 12px; border-radius: 5px; display: inline-block; animation: slideIn 0.5s ease-out; color: #dc3545;';
+            errorMessage.textContent = 'Error: Unable to get response.';
+            chatContainer.appendChild(errorMessage);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
     });
 
     // Simple animations
@@ -82,6 +108,15 @@
         @keyframes slideIn {
             from { transform: translateX(-20px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
+        }
+        .typing-dots::after {
+            content: '. . .';
+            animation: typing 1.5s infinite;
+        }
+        @keyframes typing {
+            0% { content: '.  '; }
+            33% { content: '.. '; }
+            66% { content: '...'; }
         }
     `;
     document.head.appendChild(styleSheet);
