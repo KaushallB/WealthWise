@@ -92,6 +92,11 @@ def login():
                 flash('Please reset your password using the link sent to your email before logging in.', 'danger')
                 return redirect(url_for('forgot_password'))
 
+            # Check if another user is already logged in
+            if 'user_id' in session:
+                flash('Another user is already logged in. Please log out before logging in with a different account.', 'danger')
+                return redirect(url_for('logout'))
+
             if is_email(input_data):
                 cursor.execute('SELECT * FROM users WHERE email = %s', (input_data,))
             else:
@@ -136,6 +141,7 @@ def login():
             mysql.connection.rollback()
             
     return render_template('login.html', form=log)
+
 
 @app.route('/resend_otp', methods=['GET'])
 def resend_otp():
