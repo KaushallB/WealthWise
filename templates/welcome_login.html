@@ -10,12 +10,12 @@
       <img src="https://imgur.com/KREAI4T.png" alt="WealthWise Logo" style="width: 150px; margin-bottom: 20px;">
     </div>
     
-    <h2 style="color: #2c3e50; test-align:center">Welcome back to <span style="color: #27ae60;">WealthWise</span>, {{full_name}}!</h2>
+    <h2 style="color: #2c3e50; text-align: center">Welcome back to <span style="color: #27ae60;">WealthWise</span>, {{full_name}}!</h2>
     
     <p style="font-size: 16px; color: #555;">You have successfully logged in to your WealthWise account.</p>
     <p style="font-size: 16px; color: #555;">We are glad to have you back. Continue managing your finances with confidence and ease.</p>
     
-    <p style="font-size: 16px; color: #555;">If this was not you, please logout or reset your password immediately or contact support.</p>
+    <p style="font-size: 16px; color: #555;">If this was not you, please <a href="{{ url_for('forgot_password', _external=True) }}" style="color: #27ae60; text-decoration: underline;">reset your password</a> or contact support.</p>
     
     <p style="margin-top: 30px; font-size: 14px; color: #aaa;">© 2025 WealthWise. All rights reserved.</p>
   </div>

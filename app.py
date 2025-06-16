@@ -14,10 +14,16 @@ from datetime import datetime,timedelta
 from decimal import Decimal
 from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
+import random 
+import string
+
 
 
 app = Flask(__name__)
 
+@app.route('/test_otp_email')
+def test_otp_email():
+    return render_template('otp_email.html', full_name='Test User', otp='123456')
 
 '''
 google_blueprint = make_google_blueprint(
@@ -68,6 +74,9 @@ def home():
 def is_email(identifier):
     return re.match(r'^\S+@\S+\.\S+$', identifier)
 
+def generate_otp(length=6):
+    return ''.join(random.choices(string.digits,k=length))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     log = LoginForm()
@@ -78,11 +87,17 @@ def login():
         try:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
+            # Check if a password reset is pending
+            if 'reset_token' in session:
+                flash('Please reset your password using the link sent to your email before logging in.', 'danger')
+                return redirect(url_for('forgot_password'))
+
             if is_email(input_data):
                 cursor.execute('SELECT * FROM users WHERE email = %s', (input_data,))
             else:
-                cursor.execute('SELECT * FROM users WHERE phone_number = %s', (input_data,))
-
+                phone = re.sub(r'^\+977', '', input_data).strip()
+                cursor.execute('SELECT * FROM users WHERE phone_number = %s', (phone,))
+                
             account = cursor.fetchone()
 
             if account:
@@ -90,28 +105,130 @@ def login():
                 full_name = account['full_name']
                 email = account['email']
                 if enc.check_password_hash(stored_hashed_pw, pw):
-                    flash('Login Successful', 'success')
-                    
-                    session['user_id']=account['id']
-                    
-                    msg = Message("Login Notification", recipients=[email])
-                    msg.html = render_template("welcome_login.html", full_name=full_name)
-                    mail.send(msg)
-                    
-                    return redirect(url_for('dashboard', user_id=account['id']))
+                    # Check if OTP data already exists to avoid resending
+                    if 'otp_data' not in session or not session.get('otp_data'):
+                        otp = generate_otp()
+                        otp_expiry = (datetime.now() + timedelta(minutes=5)).timestamp()
+                        session['otp_data'] = {
+                            'otp': otp,
+                            'email': email,
+                            'user_id': account['id'],
+                            'full_name': full_name,
+                            'expires': otp_expiry,
+                            'attempts': 0,
+                            'lockout_time': None
+                        }
+                        try:
+                            msg = Message("Your Wealthwise OTP", recipients=[email])
+                            msg.html = render_template("otp_email.html", full_name=full_name, otp=otp)
+                            mail.send(msg)
+                            flash("An OTP has been sent to your mail", 'info')
+                        except Exception as email_error:
+                            flash(f'Error Sending OTP: {str(email_error)}', 'danger')
+                    return redirect(url_for('verify_otp'))
                 else:
-                    flash('Invalid password', 'danger')
-                    print("Invalid password")  # Debug line
+                    flash('Invalid Password', 'danger')
             else:
                 flash('User not registered or invalid credentials', 'danger')
 
-            cursor.close()
-          
         except Exception as e:
-            flash(f'Error occurred: {e}', 'danger')
+            flash(f"Error occurred: {e}", "danger")
             mysql.connection.rollback()
-
+            
     return render_template('login.html', form=log)
+
+@app.route('/resend_otp', methods=['GET'])
+def resend_otp():
+    otp_data = session.get('otp_data')
+    if not otp_data:
+        flash('No active OTP session found. Please log in again.', 'danger')
+        return redirect(url_for('login'))
+
+    if datetime.now().timestamp() > otp_data['expires']:
+        session.pop('otp_data', None)
+        flash('OTP has expired. Please log in again to receive a new OTP.', 'danger')
+        return redirect(url_for('login'))
+
+    if otp_data.get('lockout_time') and datetime.now().timestamp() < otp_data['lockout_time']:
+        remaining_time = int(otp_data['lockout_time'] - datetime.now().timestamp())
+        flash(f'Too many invalid attempts. Please wait {remaining_time} seconds for a new OTP.', 'danger')
+        return redirect(url_for('verify_otp'))
+
+    # Regenerate and resend OTP
+    otp = generate_otp()
+    otp_expiry = (datetime.now() + timedelta(minutes=5)).timestamp()
+    otp_data.update({
+        'otp': otp,
+        'expires': otp_expiry,
+        'attempts': 0,  # Reset attempts on resend
+        'lockout_time': None  # Clear lockout on resend
+    })
+    session['otp_data'] = otp_data
+
+    try:
+        email = otp_data['email']
+        full_name = otp_data['full_name']
+        msg = Message("Your Wealthwise OTP", recipients=[email])
+        msg.html = render_template("otp_email.html", full_name=full_name, otp=otp)
+        mail.send(msg)
+        flash('A new OTP has been sent to your email.', 'success')
+    except Exception as email_error:
+        flash(f'Error sending OTP: {str(email_error)}', 'danger')
+        return redirect(url_for('verify_otp'))
+
+    return redirect(url_for('verify_otp'))
+     
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    otp_data = session.get('otp_data')
+    if not otp_data:
+        flash('No OTP session found. Please login again', 'danger')
+        return redirect(url_for('login'))
+    
+    if datetime.now().timestamp() > otp_data['expires']:
+        session.pop('otp_data', None)
+        flash('OTP has expired. Please Login again to receive a new OTP', 'danger')
+        return redirect(url_for('login'))
+    
+    # Checking for invalid attempts
+    if otp_data.get('lockout_time') and datetime.now().timestamp() < otp_data['lockout_time']:
+        remaining_time = int(otp_data['lockout_time'] - datetime.now().timestamp())
+        flash(f'Too many invalid attempts. Please wait {remaining_time} seconds for a new OTP.', 'danger')
+        return render_template('verify_otp.html')
+    
+    if request.method == 'POST':
+        user_otp = request.form.get('otp', '').strip()
+        otp_data['attempts'] += 1
+        session['otp_data'] = otp_data  # Updating session with new attempt count
+    
+        if user_otp == otp_data['otp']:
+            session['user_id'] = otp_data['user_id']
+            email = otp_data['email']
+            full_name = otp_data['full_name']
+            session.pop('otp_data', None)
+            
+            try:
+                msg = Message("Login Notification", recipients=[email])
+                msg.html = render_template("welcome_login.html", full_name=full_name)
+                mail.send(msg)
+            except Exception as email_error:
+                flash(f'Error sending welcome email: {str(email_error)}', 'warning')
+
+            flash('Login Successful', 'success')
+            return redirect(url_for('dashboard', user_id=otp_data['user_id']))
+        else:
+            if otp_data['attempts'] >= 5:
+                otp_data['lockout_time'] = (datetime.now() + timedelta(minutes=5)).timestamp()
+                session['otp_data'] = otp_data
+                flash('Too many invalid OTP attempts. A new OTP will be sent after 5 minutes.', 'danger')
+                return render_template('verify_otp.html')
+            else:
+                flash('Invalid OTP. Please try again. Attempts remaining: {}'.format(5 - otp_data['attempts']), 'danger')
+    
+    return render_template('verify_otp.html')
+            
+            
+                        
 """
 def google_login():
     if not google.authorized:
@@ -151,10 +268,15 @@ def google_login():
 def forgot_password():
     form = ForgotPasswordForm()
     if form.validate_on_submit():
-        email = form.email.data
+        identifier = form.identifier.data.strip()  # Can be email or phone
         try:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            cursor.execute('SELECT * FROM users WHERE email = %s', (email,))
+            if is_email(identifier):
+                cursor.execute('SELECT * FROM users WHERE email = %s', (identifier,))
+            else:
+                # Removing +977 if present for phone number search
+                phone = re.sub(r'^\+977', '', identifier).strip()
+                cursor.execute('SELECT * FROM users WHERE phone_number = %s', (phone,))
             user = cursor.fetchone()
             cursor.close()
 
@@ -162,11 +284,16 @@ def forgot_password():
                 # Generating a simple token (user ID + timestamp)
                 token = f"{user['id']}-{int(datetime.now().timestamp())}"
                 reset_url = url_for('reset_password', token=token, _external=True)
-                session['reset_token'] = {'token': token, 'email': email, 'expires': (datetime.now() + timedelta(minutes=2)).timestamp()}
+                session['reset_token'] = {
+                    'token': token,
+                    'email': user['email'],
+                    'phone': user['phone_number'],
+                    'expires': (datetime.now() + timedelta(minutes=2)).timestamp()
+                }
 
-                # Sending reset email via Mailpit using the correct template
+                # Sending reset email or SMS (email for now, SMS can be added later)
                 try:
-                    msg = Message("Password Reset Request", recipients=[email])
+                    msg = Message("Password Reset Request", recipients=[user['email']])
                     msg.html = render_template("password_reset_email.html", full_name=user['full_name'], reset_url=reset_url)
                     mail.send(msg)
                     flash('A password reset link has been sent to your email.', 'success')
@@ -174,7 +301,7 @@ def forgot_password():
                     flash(f'Error sending email: {str(email_error)}', 'danger')
                     raise  # Re-raise for full stack trace
             else:
-                flash('Email not found. Please register first.', 'danger')
+                flash('Identifier not found. Please register first.', 'danger')
                 return redirect(url_for('registration'))
 
         except Exception as e:
@@ -193,14 +320,22 @@ def reset_password(token):
         flash('Invalid or expired reset link.', 'danger')
         return redirect(url_for('forgot_password'))
 
+    if is_logged_in():
+        session.pop('user_id', None)
+        flash('You have been logged out to reset your password.', 'info')
+        
     form = ResetPasswordForm()
     # Fetch the current password hash for the user
     try:
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT password_hash FROM users WHERE email = %s', (reset_data['email'],))
+        cursor.execute('SELECT password_hash FROM users WHERE email = %s OR phone_number = %s', 
+                       (reset_data['email'], reset_data['phone']))
         user = cursor.fetchone()
         if user and 'password_hash' in user:
             form.meta = {'current_password_hash': user['password_hash']}
+        else:
+            flash('User not found.', 'danger')
+            return redirect(url_for('forgot_password'))
         cursor.close()
     except Exception as e:
         flash(f'Error fetching user data: {str(e)}', 'danger')
@@ -210,7 +345,8 @@ def reset_password(token):
         try:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             hashed_password = enc.generate_password_hash(form.new_password.data).decode('utf-8')
-            cursor.execute('UPDATE users SET password_hash = %s WHERE email = %s', (hashed_password, reset_data['email']))
+            cursor.execute('UPDATE users SET password_hash = %s WHERE email = %s OR phone_number = %s', 
+                           (hashed_password, reset_data['email'], reset_data['phone']))
             mysql.connection.commit()
             cursor.close()
 
@@ -227,6 +363,7 @@ def reset_password(token):
 
     return render_template('reset_password.html', form=form, token=token)
 
+
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     form = RegistrationForm()
@@ -239,6 +376,7 @@ def registration():
     
         try:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            phone_num = re.sub(r'^\+977', '', phone_num).strip()
             cursor.execute('SELECT * FROM users WHERE phone_number=%s OR email=%s', (phone_num, email))
             account = cursor.fetchone()
             if account:
@@ -267,6 +405,7 @@ def registration():
             mysql.connection.rollback()
 
     return render_template('register.html', form=form)
+
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)

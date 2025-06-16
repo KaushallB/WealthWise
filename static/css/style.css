@@ -257,37 +257,140 @@ html[data-bs-theme="light"] .bg-primary p {
 .budget-allocation-card .card-title {
     color: white !important;
 }
-/* Theme toggle */
+
+/* Improved Theme Toggle Styles */
 .theme-toggle {
-    padding-right: 1rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
     margin-right: 1rem;
-    background-color: var(--bs-body-bg);
+    padding: 0;
+}
+
+.theme-toggle:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transform: scale(1.05);
+    text-decoration: none;
+}
+
+.theme-toggle i {
+    font-size: 1.3rem;
+    color: var(--bs-body-color);
+    transition: all 0.3s ease;
+    position: absolute;
+}
+
+.theme-toggle:hover i {
+    color: white;
+}
+
+/* Show/Hide icons based on theme - Fixed */
+.theme-toggle i {
+    font-size: 1.3rem;
+    color: var(--bs-body-color);
+    transition: all 0.3s ease;
+    position: absolute;
+    opacity: 1;
+}
+
+/* Default state - show sun icon, hide moon */
+.theme-toggle .bi-moon-fill {
+    opacity: 0;
+    display: none;
+}
+
+.theme-toggle .bi-brightness-high-fill {
+    opacity: 1;
+    display: block;
+}
+
+/* Dark theme - show moon icon, hide sun */
+html[data-bs-theme="dark"] .theme-toggle .bi-moon-fill {
+    opacity: 1;
+    display: block;
+}
+
+html[data-bs-theme="dark"] .theme-toggle .bi-brightness-high-fill {
+    opacity: 0;
+    display: none;
+}
+
+/* Light theme - show sun icon, hide moon */
+html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
+    opacity: 0;
+    display: none;
+}
+
+html[data-bs-theme="light"] .theme-toggle .bi-brightness-high-fill {
+    opacity: 1;
+    display: block;
+}
+
+/* Modern Switch Alternative (commented out - uncomment if you prefer this style) */
+/*
+.theme-toggle-modern {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 28px;
+    background: var(--bs-secondary);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    margin-right: 1rem;
+    border: none;
+}
+
+.theme-toggle-modern::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    left: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+html[data-bs-theme="light"] .theme-toggle-modern {
+    background: var(--bs-primary);
+}
+
+html[data-bs-theme="light"] .theme-toggle-modern::before {
+    transform: translateX(22px);
+}
+
+.theme-toggle-modern i {
+    position: absolute;
+    font-size: 0.8rem;
     z-index: 1;
 }
 
-html[data-bs-theme="dark"] .theme-toggle {
-    background-color: var(--bs-body-bg);
+.theme-toggle-modern .bi-brightness-high-fill {
+    left: 8px;
+    color: #fff;
 }
 
-html[data-bs-theme="light"] .theme-toggle {
-    background-color: var(--bs-body-bg);
+.theme-toggle-modern .bi-moon-fill {
+    right: 8px;
+    color: #fff;
 }
+*/
 
-html[data-bs-theme="dark"] .theme-toggle .bi-brightness-low,
-html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
-    cursor: pointer;
-    padding: 10px;
-    font-size: 1.25rem;
-    color: var(--bs-primary);
-}
-
-html[data-bs-theme="dark"] .theme-toggle .bi-brightness-low {
-    display: none;
-}
-
-html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
-    display: none;
-}
 #budgetPieChart {
     max-height: 300px;
     width: 100%;

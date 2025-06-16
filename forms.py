@@ -51,8 +51,8 @@ class LoginForm(FF):
     submit = SubmitField('Login')
 
 class ForgotPasswordForm(FF):
-    email = StringField('Email Address', validators=[DataRequired(), Email()])
-    submit = SubmitField('Send Reset Link')
+    identifier = StringField('Email or Phone Number', validators=[DataRequired()])
+    submit = SubmitField('Request Reset')
 
 class ResetPasswordForm(FF):
     new_password = PasswordField('New Password', validators=[DataRequired(), pw_val, no_previous_password])
