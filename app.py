@@ -880,7 +880,17 @@ def visualize(user_id):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
         user = cursor.fetchone()
+        
+        if not user:
+            flash('User not found', 'danger')
+            return redirect(url_for('login'))
+            
         full_name = user['full_name']
+        
+        # Debug: Check if transactions exist
+        cursor.execute('SELECT COUNT(*) as count FROM transactions WHERE user_id = %s', (user_id,))
+        count_result = cursor.fetchone()
+        print(f"Total transactions for user {user_id}: {count_result['count']}")
         
         cursor.execute('''
             SELECT date, category, amount, transaction_type 
@@ -891,80 +901,122 @@ def visualize(user_id):
         data = cursor.fetchall()
 
         if not data:
-            flash('No transaction data available for visualization', 'warning')
+            flash('No transaction data available for visualization. Please add some transactions first.', 'warning')
             return redirect(url_for('dashboard', user_id=user_id))
 
-        # Converting to DataFrame
-        df = pd.DataFrame(data, columns=['Date', 'Category', 'Amount', 'TransactionType'])
-        df['Date'] = pd.to_datetime(df['Date'])
-        df['Amount'] = df['Amount'].astype(float)
+        # Convert to DataFrame with proper data types
+        df = pd.DataFrame(data)
+        print(f"DataFrame shape: {df.shape}")
+        print(f"DataFrame columns: {df.columns.tolist()}")
+        print(f"First few rows:\n{df.head()}")
+        
+        # Ensure proper data types
+        df['date'] = pd.to_datetime(df['date'])
+        df['amount'] = pd.to_numeric(df['amount'], errors='coerce')
+        
+        # Remove any rows with NaN amounts
+        df = df.dropna(subset=['amount'])
+        
+        if df.empty:
+            flash('No valid transaction data found after processing.', 'warning')
+            return redirect(url_for('dashboard', user_id=user_id))
 
-        # Creating directories
+        # Create directories
         reports_dir = os.path.join('static', 'reports')
         charts_dir = os.path.join('static', 'charts')
         os.makedirs(reports_dir, exist_ok=True)
         os.makedirs(charts_dir, exist_ok=True)
 
-        # Save to Excel
+        # Save to Excel with proper formatting
         excel_filename = f'{full_name}_transactions.xlsx'
         excel_path = os.path.join(reports_dir, excel_filename)
-        df.to_excel(excel_path, index=False)
-
-        # Setting style for better looking charts
-        plt.style.use('seaborn-v0_8')
         
-        # Chart 1: Pie chart for expense categories
-        expenses_df = df[df['TransactionType'] == 'expense']
+        # Use ExcelWriter for better control
+        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='Transactions', index=False)
+            
+            # Add summary sheet
+            summary_data = []
+            total_income = df[df['transaction_type'] == 'income']['amount'].sum()
+            total_expenses = df[df['transaction_type'] == 'expense']['amount'].sum()
+            
+            summary_data.append(['Total Income', f'Rs {total_income:.2f}'])
+            summary_data.append(['Total Expenses', f'Rs {total_expenses:.2f}'])
+            summary_data.append(['Net Balance', f'Rs {(total_income - total_expenses):.2f}'])
+            
+            summary_df = pd.DataFrame(summary_data, columns=['Category', 'Amount'])
+            summary_df.to_excel(writer, sheet_name='Summary', index=False)
+
+        print(f"Excel file saved to: {excel_path}")
+
+        # Generate charts with error handling
+        plt.style.use('default')  # Use default style to avoid seaborn issues
+        
+        # Chart 1: Expense distribution
+        expenses_df = df[df['transaction_type'] == 'expense'].copy()
+        
         if not expenses_df.empty:
-            plt.figure(figsize=(12, 8))
-            expense_summary = expenses_df.groupby('Category')['Amount'].sum()
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(15, 12))
+            
+            # Pie chart for expenses
+            expense_summary = expenses_df.groupby('category')['amount'].sum()
             colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
             
-            plt.subplot(2, 2, 1)
-            plt.pie(expense_summary.values, labels=expense_summary.index, autopct='%1.1f%%', 
-                   colors=colors, startangle=90)
-            plt.title('Expense Distribution by Category', fontsize=14, fontweight='bold')
+            ax1.pie(expense_summary.values, labels=expense_summary.index, autopct='%1.1f%%', 
+                   colors=colors[:len(expense_summary)], startangle=90)
+            ax1.set_title('Expense Distribution by Category', fontsize=14, fontweight='bold')
             
-            # Chart 2: Bar chart for monthly expenses
-            plt.subplot(2, 2, 2)
-            expenses_df['Month'] = expenses_df['Date'].dt.to_period('M')
-            monthly_expenses = expenses_df.groupby('Month')['Amount'].sum()
-            bars = plt.bar(range(len(monthly_expenses)), monthly_expenses.values, 
+            # Monthly expenses bar chart
+            expenses_df['month'] = expenses_df['date'].dt.to_period('M')
+            monthly_expenses = expenses_df.groupby('month')['amount'].sum()
+            
+            bars = ax2.bar(range(len(monthly_expenses)), monthly_expenses.values, 
                           color='#FF6B6B', alpha=0.7)
-            plt.title('Monthly Expenses', fontsize=14, fontweight='bold')
-            plt.xlabel('Month')
-            plt.ylabel('Amount (Rs)')
-            plt.xticks(range(len(monthly_expenses)), 
-                      [str(month) for month in monthly_expenses.index], rotation=45)
+            ax2.set_title('Monthly Expenses', fontsize=14, fontweight='bold')
+            ax2.set_xlabel('Month')
+            ax2.set_ylabel('Amount (Rs)')
+            ax2.set_xticks(range(len(monthly_expenses)))
+            ax2.set_xticklabels([str(month) for month in monthly_expenses.index], rotation=45)
             
             # Add value labels on bars
             for bar in bars:
                 height = bar.get_height()
-                plt.text(bar.get_x() + bar.get_width()/2., height + 50,
+                ax2.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
                         f'Rs {height:.0f}', ha='center', va='bottom', fontsize=9)
-
-        # Chart 3: Income vs Expenses timeline
-        plt.subplot(2, 1, 2)
         
-        # Group by month for cleaner visualization
-        df['Month'] = df['Date'].dt.to_period('M')
-        monthly_data = df.groupby(['Month', 'TransactionType'])['Amount'].sum().unstack(fill_value=0)
+        # Income vs Expenses comparison
+        df['month'] = df['date'].dt.to_period('M')
+        monthly_data = df.groupby(['month', 'transaction_type'])['amount'].sum().unstack(fill_value=0)
         
-        if 'income' in monthly_data.columns and 'expense' in monthly_data.columns:
+        if not monthly_data.empty:
             x_pos = range(len(monthly_data.index))
             width = 0.35
             
-            plt.bar([x - width/2 for x in x_pos], monthly_data['income'], 
-                   width, label='Income', color='#4ECDC4', alpha=0.8)
-            plt.bar([x + width/2 for x in x_pos], monthly_data['expense'], 
-                   width, label='Expenses', color='#FF6B6B', alpha=0.8)
+            if 'income' in monthly_data.columns:
+                ax3.bar([x - width/2 for x in x_pos], monthly_data['income'], 
+                       width, label='Income', color='#4ECDC4', alpha=0.8)
+            if 'expense' in monthly_data.columns:
+                ax3.bar([x + width/2 for x in x_pos], monthly_data['expense'], 
+                       width, label='Expenses', color='#FF6B6B', alpha=0.8)
             
-            plt.title('Monthly Income vs Expenses', fontsize=14, fontweight='bold')
-            plt.xlabel('Month')
-            plt.ylabel('Amount (Rs)')
-            plt.xticks(x_pos, [str(month) for month in monthly_data.index], rotation=45)
-            plt.legend()
-            plt.grid(axis='y', alpha=0.3)
+            ax3.set_title('Monthly Income vs Expenses', fontsize=14, fontweight='bold')
+            ax3.set_xlabel('Month')
+            ax3.set_ylabel('Amount (Rs)')
+            ax3.set_xticks(x_pos)
+            ax3.set_xticklabels([str(month) for month in monthly_data.index], rotation=45)
+            ax3.legend()
+            ax3.grid(axis='y', alpha=0.3)
+        
+        # Daily spending pattern
+        if not expenses_df.empty:
+            daily_expenses = expenses_df.groupby('date')['amount'].sum().reset_index()
+            ax4.plot(daily_expenses['date'], daily_expenses['amount'], 
+                    marker='o', linewidth=2, markersize=4, color='#FF6B6B')
+            ax4.set_title('Daily Spending Pattern', fontsize=14, fontweight='bold')
+            ax4.set_xlabel('Date')
+            ax4.set_ylabel('Amount (Rs)')
+            ax4.tick_params(axis='x', rotation=45)
+            ax4.grid(alpha=0.3)
 
         plt.tight_layout()
         chart_filename = f'{full_name}_financial_overview.png'
@@ -972,55 +1024,25 @@ def visualize(user_id):
         plt.savefig(chart_path, dpi=300, bbox_inches='tight')
         plt.close()
 
-        # Creating spending pattern chart
-        plt.figure(figsize=(12, 6))
-        
-        # Daily spending pattern
-        if not expenses_df.empty:
-            daily_expenses = expenses_df.groupby('Date')['Amount'].sum().reset_index()
-            
-            plt.subplot(1, 2, 1)
-            plt.plot(daily_expenses['Date'], daily_expenses['Amount'], 
-                    marker='o', linewidth=2, markersize=4, color='#FF6B6B')
-            plt.title('Daily Spending Pattern', fontsize=14, fontweight='bold')
-            plt.xlabel('Date')
-            plt.ylabel('Amount (Rs)')
-            plt.xticks(rotation=45)
-            plt.grid(alpha=0.3)
-            
-            # Category-wise spending heatmap
-            plt.subplot(1, 2, 2)
-            category_daily = expenses_df.pivot_table(
-                values='Amount', index='Category', columns=expenses_df['Date'].dt.day, 
-                aggfunc='sum', fill_value=0)
-            
-            if not category_daily.empty:
-                sns.heatmap(category_daily, annot=True, fmt='.0f', cmap='Reds', 
-                           cbar_kws={'label': 'Amount (Rs)'})
-                plt.title('Daily Spending by Category', fontsize=14, fontweight='bold')
-                plt.xlabel('Day of Month')
-                plt.ylabel('Category')
-
-        plt.tight_layout()
-        pattern_filename = f'{full_name}_spending_patterns.png'
-        pattern_path = os.path.join(charts_dir, pattern_filename)
-        plt.savefig(pattern_path, dpi=300, bbox_inches='tight')
-        plt.close()
-
-        # Storing chart filenames in session for template access
+        # Store chart filenames in session
         session['chart_files'] = {
             'overview': chart_filename,
-            'patterns': pattern_filename,
+            'patterns': chart_filename,  # Using same file for now
             'excel': excel_filename
         }
 
-        flash('Reports generated successfully! Check the reports section.', 'success')
-        return redirect(url_for('dashboard', user_id=user_id))
+        flash('Reports generated successfully!', 'success')
+        return redirect(url_for('view_reports', user_id=user_id))
     
     except Exception as e:
+        print(f"Error in visualize function: {str(e)}")
+        import traceback
+        traceback.print_exc()
         flash(f'Error generating visualizations: {e}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
-        
+    finally:
+        cursor.close()
+
 @app.route('/view_reports/<int:user_id>')
 def view_reports(user_id):
     if not is_logged_in():
