@@ -877,18 +877,16 @@ def visualize(user_id):
         return redirect(url_for('logout'))
     
     try:
-        
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)  # Using DictCursor
-        # Fetching full_name for the user
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT full_name FROM users WHERE id = %s', (user_id,))
         user = cursor.fetchone()
         full_name = user['full_name']
         
-        cursor = mysql.connection.cursor()
         cursor.execute('''
             SELECT date, category, amount, transaction_type 
             FROM transactions 
             WHERE user_id = %s
+            ORDER BY date ASC
         ''', (user_id,))
         data = cursor.fetchall()
 
@@ -901,48 +899,127 @@ def visualize(user_id):
         df['Date'] = pd.to_datetime(df['Date'])
         df['Amount'] = df['Amount'].astype(float)
 
+        # Creating directories
+        reports_dir = os.path.join('static', 'reports')
+        charts_dir = os.path.join('static', 'charts')
+        os.makedirs(reports_dir, exist_ok=True)
+        os.makedirs(charts_dir, exist_ok=True)
+
         # Save to Excel
-        excel_path = os.path.join('OfflineReports', 'reports', f'{full_name}_transactions.xlsx')
-        os.makedirs(os.path.dirname(excel_path), exist_ok=True)
+        excel_filename = f'{full_name}_transactions.xlsx'
+        excel_path = os.path.join(reports_dir, excel_filename)
         df.to_excel(excel_path, index=False)
 
-        # Visualization 1: Bar chart of expenses by category
+        # Setting style for better looking charts
+        plt.style.use('seaborn-v0_8')
+        
+        # Chart 1: Pie chart for expense categories
         expenses_df = df[df['TransactionType'] == 'expense']
         if not expenses_df.empty:
-            plt.figure(figsize=(10, 6))
-            sns.barplot(x='Category', y='Amount', hue='Category', data=expenses_df, estimator=sum)
-            plt.title(f"Expenses by Category for {full_name}")
-            plt.xlabel("Category")
-            plt.ylabel("Amount Spent (Rs)")
-            plt.xticks(rotation=45)
-            chart_path = os.path.join('OfflineReports', 'charts', f'{full_name}_expenses_by_category.png')
-            os.makedirs(os.path.dirname(chart_path), exist_ok=True)
-            plt.savefig(chart_path)
-            plt.close()
+            plt.figure(figsize=(12, 8))
+            expense_summary = expenses_df.groupby('Category')['Amount'].sum()
+            colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8']
             
+            plt.subplot(2, 2, 1)
+            plt.pie(expense_summary.values, labels=expense_summary.index, autopct='%1.1f%%', 
+                   colors=colors, startangle=90)
+            plt.title('Expense Distribution by Category', fontsize=14, fontweight='bold')
+            
+            # Chart 2: Bar chart for monthly expenses
+            plt.subplot(2, 2, 2)
+            expenses_df['Month'] = expenses_df['Date'].dt.to_period('M')
+            monthly_expenses = expenses_df.groupby('Month')['Amount'].sum()
+            bars = plt.bar(range(len(monthly_expenses)), monthly_expenses.values, 
+                          color='#FF6B6B', alpha=0.7)
+            plt.title('Monthly Expenses', fontsize=14, fontweight='bold')
+            plt.xlabel('Month')
+            plt.ylabel('Amount (Rs)')
+            plt.xticks(range(len(monthly_expenses)), 
+                      [str(month) for month in monthly_expenses.index], rotation=45)
+            
+            # Add value labels on bars
+            for bar in bars:
+                height = bar.get_height()
+                plt.text(bar.get_x() + bar.get_width()/2., height + 50,
+                        f'Rs {height:.0f}', ha='center', va='bottom', fontsize=9)
 
-        # Visualization 2: Line chart of transactions over time
-        # Visualization 2: Scatter plot of transactions over time
-        plt.figure(figsize=(10, 6))
-        sns.scatterplot(x='Date', y='Amount', hue='TransactionType', style='TransactionType', size='Amount', data=df)
-        plt.title(f"Transactions Over Time for {full_name}")
-        plt.xlabel("Date")
-        plt.ylabel("Amount (Rs)")
-        plt.xticks(rotation=45)
-        chart_path = os.path.join('OfflineReports', 'charts', f'{full_name}_transactions_over_time.png')
-        os.makedirs(os.path.dirname(chart_path), exist_ok=True)
-        plt.savefig(chart_path)
+        # Chart 3: Income vs Expenses timeline
+        plt.subplot(2, 1, 2)
+        
+        # Group by month for cleaner visualization
+        df['Month'] = df['Date'].dt.to_period('M')
+        monthly_data = df.groupby(['Month', 'TransactionType'])['Amount'].sum().unstack(fill_value=0)
+        
+        if 'income' in monthly_data.columns and 'expense' in monthly_data.columns:
+            x_pos = range(len(monthly_data.index))
+            width = 0.35
+            
+            plt.bar([x - width/2 for x in x_pos], monthly_data['income'], 
+                   width, label='Income', color='#4ECDC4', alpha=0.8)
+            plt.bar([x + width/2 for x in x_pos], monthly_data['expense'], 
+                   width, label='Expenses', color='#FF6B6B', alpha=0.8)
+            
+            plt.title('Monthly Income vs Expenses', fontsize=14, fontweight='bold')
+            plt.xlabel('Month')
+            plt.ylabel('Amount (Rs)')
+            plt.xticks(x_pos, [str(month) for month in monthly_data.index], rotation=45)
+            plt.legend()
+            plt.grid(axis='y', alpha=0.3)
+
+        plt.tight_layout()
+        chart_filename = f'{full_name}_financial_overview.png'
+        chart_path = os.path.join(charts_dir, chart_filename)
+        plt.savefig(chart_path, dpi=300, bbox_inches='tight')
         plt.close()
 
-        flash('Visualizations and Excel file saved successfully', 'success')
+        # Creating spending pattern chart
+        plt.figure(figsize=(12, 6))
+        
+        # Daily spending pattern
+        if not expenses_df.empty:
+            daily_expenses = expenses_df.groupby('Date')['Amount'].sum().reset_index()
+            
+            plt.subplot(1, 2, 1)
+            plt.plot(daily_expenses['Date'], daily_expenses['Amount'], 
+                    marker='o', linewidth=2, markersize=4, color='#FF6B6B')
+            plt.title('Daily Spending Pattern', fontsize=14, fontweight='bold')
+            plt.xlabel('Date')
+            plt.ylabel('Amount (Rs)')
+            plt.xticks(rotation=45)
+            plt.grid(alpha=0.3)
+            
+            # Category-wise spending heatmap
+            plt.subplot(1, 2, 2)
+            category_daily = expenses_df.pivot_table(
+                values='Amount', index='Category', columns=expenses_df['Date'].dt.day, 
+                aggfunc='sum', fill_value=0)
+            
+            if not category_daily.empty:
+                sns.heatmap(category_daily, annot=True, fmt='.0f', cmap='Reds', 
+                           cbar_kws={'label': 'Amount (Rs)'})
+                plt.title('Daily Spending by Category', fontsize=14, fontweight='bold')
+                plt.xlabel('Day of Month')
+                plt.ylabel('Category')
+
+        plt.tight_layout()
+        pattern_filename = f'{full_name}_spending_patterns.png'
+        pattern_path = os.path.join(charts_dir, pattern_filename)
+        plt.savefig(pattern_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        # Storing chart filenames in session for template access
+        session['chart_files'] = {
+            'overview': chart_filename,
+            'patterns': pattern_filename,
+            'excel': excel_filename
+        }
+
+        flash('Reports generated successfully! Check the reports section.', 'success')
         return redirect(url_for('dashboard', user_id=user_id))
     
     except Exception as e:
         flash(f'Error generating visualizations: {e}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
-    
-    finally:
-        cursor.close()
         
 @app.route('/view_reports/<int:user_id>')
 def view_reports(user_id):
