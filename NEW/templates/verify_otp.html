@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.min.css') }}">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <title>Verify OTP</title>
+    <style>
+        body, section {
+            margin: 0;
+            padding: 0;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .submit {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .resend {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .resend-link {
+            color: #D79922;
+            text-decoration: none;
+        }
+        .resend-link:hover {
+            color: #ffc107;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <section style="background-color: #EFE2BA; min-height: 100vh;">
+        <div class="container-lg py-5 h-100">
+            <div class="row d-flex justify-content-center align-items-center h-100 mx-auto">
+                <div class="col-12 col-xl-10">
+                    <div class="card bg-blue" style="border-radius: 1rem;">
+                        <div class="row g-0">
+                            <div class="col-md-6 col-lg-5 d-none d-md-block">
+                                <img src="{{ url_for('static', filename='assets/finance.png') }}" alt="otp form" class="img-fluid" style="border-radius: 1rem 0 0 1rem; height: 100%; object-fit: cover;" />
+                            </div>
+                            <div class="col-md-6 col-lg-7 d-flex align-items-center">
+                                <div class="card-body p-4 p-lg-5 text-black">
+                                    {% with messages = get_flashed_messages(with_categories=true) %}
+                                        {% if messages %}
+                                            {% for category, message in messages %}
+                                                <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+                                                    {{message}}
+                                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endwith %}
+                                    <form method="POST" action="{{url_for('verify_otp')}}">
+                                        <div class="logo-container">
+                                            <img class="w-25 img-fluid" src="{{ url_for('static', filename='assets/logowhite.png') }}" alt="logo"/>
+                                        </div>
+                                        <div class="header">
+                                            <h5 class="fw-bold mb-3 pb-3 justify-content-center text-white" style="letter-spacing: 1px;">Enter Your OTP</h5>
+                                        </div>
+                                        <div data-mdb-input-init class="form-outline mb-4">
+                                            <label class="form-label text-white f2-light" for="otp">One-Time Password</label>
+                                            <div class="input-group mb-4">
+                                                <span class="input-group-text" style="background-color: #D79922; border-color: #D79922;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-key-fill" viewBox="0 0 16 16">
+                                                        <path d="M3.5 11.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7m7-7.5a1 1 0 1 0-2 0 1 1 0 0 0 2 0m0 5.828V8a1 1 0 0 0-1-1v0a1 1 0 0 0-1 1v1.828a2 2 0 1 0 2 0"/>
+                                                    </svg>
+                                                </span>
+                                                <input type="text" name="otp" id="otp" class="form-control form-control-lg" placeholder="Enter OTP" required>
+                                            </div>
+                                        </div>
+                                        <div class="submit pt-1 mb-4">
+                                            <button type="submit" class="btn btn-lg btn-block btn-yellow text-white">Verify OTP</button>
+                                        </div>
+                                        <div class="resend">
+                                            <p class="mb-2 text-light">Didn't receive the OTP? <a href="{{url_for('login')}}" class="resend-link">Resend OTP</a></p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

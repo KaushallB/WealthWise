@@ -1,0 +1,397 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+*,
+::after,
+::before{
+    box-sizing: border-box;
+}
+:root {
+    --bs-primary: #efe2ba; 
+    --bs-primary-rgb: 239, 226, 186; 
+    --secondary: #4056A1;
+    --warning:#F13C10;
+
+}
+
+a{
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Outfit',sans-serif;
+}  
+
+h4{
+    font-family: 'Outfit',sans-serif;
+    font-size: 1.5rem;
+    color:var(--bs-emphasis-color);
+}
+
+li{
+    list-style: none;
+}
+
+body{
+    font-family: 'Outfit',serif;
+    font-size: 0.875em;
+    opacity: 1;
+    overflow-y:scroll ;
+    margin: 0;
+    
+}
+.main-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    background-color: #343a40;
+    width: 250px;
+    overflow-y: auto;
+}
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+@media (max-width: 767.98px) {
+    .main-wrapper {
+        flex-direction: column;
+    }
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+    .main-content {
+        width: 100%;
+    }
+}
+
+.wrapper{
+
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+.main{
+    display: flex;
+    flex-direction: column;
+    min-height:100vh ;
+    min-width: 0;
+    width: 100%;
+    overflow: hidden;
+    transition: all 0.25s ease-in-out;
+    background:var(--bs-body-bg);
+}
+#sidebar{
+    max-width: 264px;
+    min-width: 264px;
+    transition: all 0.25s ease-in-out;
+    background:var(--bs-dark);
+    
+}
+
+.sidebar-logo{
+    padding: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    text-align: center;
+    
+}
+.sidebar-logo a{
+    color:aliceblue ;
+    font-size: 2rem;
+    font-weight: 700;
+    position: sticky;
+    z-index: 1000;
+    top: 0;
+    
+    
+     
+}
+.sidebar-nav{
+    flex-grow: 1;
+    list-style: none;
+    margin-bottom: 0;
+    padding-left: 0;
+    margin-left: 0;
+    overflow: hidden;
+    position:fixed;
+}
+
+.sidebar-header{
+    color: aliceblue;
+    font-size: 0.85rem;
+    padding: 1.5rem 1.5rem .375rem;
+}
+a.sidebar-link{
+    padding:.625rem 1.625rem ;
+    color: aliceblue;
+    position: relative;
+    display: block;
+    font-size: 0.875rem;
+}
+
+.sidebar-link[data-bs-toggle="collapse"]::after{
+    border: solid;
+    border-width: 0 .075rem .075rem 0;
+    content: "";
+    display: inline-block;
+    padding: 2px;
+    position: absolute;
+    right: 1.5rem;
+    top: 1.4rem;
+    transform: rotate(-135deg);
+    transition: all 0.5s ease-out;
+    
+}
+.sidebar-link[data-bs-toggle="collapse"].collapsed::after{
+    transform: rotate(45deg);
+    transition: all 0.2s ease-out;
+}
+.avatar{
+   height: 50px;
+   width: 50px;
+
+}
+.navbar-expand .navbar-nav{
+    margin-left: auto;
+}
+.content{
+    flex: 1;
+    max-width:100vw;
+    width: 100vw;
+}
+@media (min-width:768px) {
+    .content{
+        max-width: auto;
+        width: auto;
+    }
+}
+.card{
+    box-shadow: 0 0 .875rem 0 rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+    border: 1px solid #ddd; 
+    border-radius: 8px;
+    background-color: var(--bs-light-bg-subtle);
+
+}
+.illustration{
+    
+    color: var(--bs-emphasis-color);
+    border-radius: 8px;
+}
+.illustration-img{
+    max-width: 150px;
+    width: 100%;
+}
+.card-body{
+    padding: 1rem;
+}
+#sidebar.collapsed{
+    margin-left: -264px;
+}
+
+ .btn-toggle-group .btn {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+            transition: all 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+}
+.btn-toggle-group .btn.active {
+            background-color: #c0392b;
+            border-color: #a93226;
+}
+.btn-toggle-group .btn:hover {
+            background-color: #c0392b;
+            border-color: #a93226;
+            transform: scale(1.05);
+}
+
+html[data-bs-theme="dark"] {
+    --bs-primary: #efe2ba;
+    --bs-primary-rgb: 239, 226, 186;
+}
+
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.btn-primary:hover {
+    background-color: #e6d9a8;
+    border-color: #e6d9a8;
+}
+
+.bg-primary {
+    background-color: var(--bs-primary) ;
+}
+
+html[data-bs-theme="dark"] .bg-primary {
+    background-color: #d4c89e; 
+}
+
+.text-primary {
+    color: var(--bs-primary);
+}
+
+/* Ensuring text inside .bg-primary card is black in both themes */
+.bg-primary h4,
+.bg-primary p {
+    color: white ;
+}
+
+html[data-bs-theme="dark"] .bg-primary h4,
+html[data-bs-theme="dark"] .bg-primary p,
+html[data-bs-theme="light"] .bg-primary h4,
+html[data-bs-theme="light"] .bg-primary p {
+    color: white;
+}
+.budget-allocation-card {
+    background-color: var(--bs-primary) !important;
+}
+
+.budget-allocation-card h6,
+.budget-allocation-card p,
+.budget-allocation-card .card-title {
+    color: white !important;
+}
+
+/* Improved Theme Toggle Styles */
+.theme-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border: 2px solid var(--bs-border-color);
+    border-radius: 50%;
+    background: var(--bs-body-bg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    margin-right: 1rem;
+    padding: 0;
+}
+
+.theme-toggle:hover {
+    background: var(--bs-primary);
+    border-color: var(--bs-primary);
+    transform: scale(1.05);
+    text-decoration: none;
+}
+
+.theme-toggle i {
+    font-size: 1.3rem;
+    color: var(--bs-body-color);
+    transition: all 0.3s ease;
+    position: absolute;
+}
+
+.theme-toggle:hover i {
+    color: white;
+}
+
+/* Show/Hide icons based on theme - Fixed */
+.theme-toggle i {
+    font-size: 1.3rem;
+    color: var(--bs-body-color);
+    transition: all 0.3s ease;
+    position: absolute;
+    opacity: 1;
+}
+
+/* Default state - show sun icon, hide moon */
+.theme-toggle .bi-moon-fill {
+    opacity: 0;
+    display: none;
+}
+
+.theme-toggle .bi-brightness-high-fill {
+    opacity: 1;
+    display: block;
+}
+
+/* Dark theme - show moon icon, hide sun */
+html[data-bs-theme="dark"] .theme-toggle .bi-moon-fill {
+    opacity: 1;
+    display: block;
+}
+
+html[data-bs-theme="dark"] .theme-toggle .bi-brightness-high-fill {
+    opacity: 0;
+    display: none;
+}
+
+/* Light theme - show sun icon, hide moon */
+html[data-bs-theme="light"] .theme-toggle .bi-moon-fill {
+    opacity: 0;
+    display: none;
+}
+
+html[data-bs-theme="light"] .theme-toggle .bi-brightness-high-fill {
+    opacity: 1;
+    display: block;
+}
+
+/* Modern Switch Alternative (commented out - uncomment if you prefer this style) */
+/*
+.theme-toggle-modern {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 28px;
+    background: var(--bs-secondary);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    margin-right: 1rem;
+    border: none;
+}
+
+.theme-toggle-modern::before {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    left: 2px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+html[data-bs-theme="light"] .theme-toggle-modern {
+    background: var(--bs-primary);
+}
+
+html[data-bs-theme="light"] .theme-toggle-modern::before {
+    transform: translateX(22px);
+}
+
+.theme-toggle-modern i {
+    position: absolute;
+    font-size: 0.8rem;
+    z-index: 1;
+}
+
+.theme-toggle-modern .bi-brightness-high-fill {
+    left: 8px;
+    color: #fff;
+}
+
+.theme-toggle-modern .bi-moon-fill {
+    right: 8px;
+    color: #fff;
+}
+*/
+
+#budgetPieChart {
+    max-height: 300px;
+    width: 100%;
+}

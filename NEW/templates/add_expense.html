@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense - WealthWise{% endblock %}
+
+{% block main_content %}
+<style>
+body {
+    background: linear-gradient(135deg, #f7dada 0%, #e2b3b3 100%);
+    font-family: 'Arial', sans-serif;
+}    
+.card {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.form-control, .form-select {
+    border-color: #e74c3c;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #c0392b;
+    box-shadow: 0 0 10px rgba(192, 57, 43, 0.3);
+}
+.btn-primary {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+.btn-primary:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+    transform: scale(1.05);
+}
+.btn-secondary {
+    background-color: #d35400;
+    border-color: #d35400;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+.btn-secondary:hover {
+    background-color: #b84500;
+    border-color: #b84500;
+    transform: scale(1.05);
+}
+.chatbot-btn {
+    background-color: #3498db;
+    border-color: #3498db;
+    border-radius: 10px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+}
+.chatbot-btn:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+    transform: scale(1.05);
+}
+.expense-card {
+   
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+}
+.help-section {
+    
+    border: 1px solid #e74c3c;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.fade-in {
+    animation: fadeIn 1s ease-in;
+}
+</style>
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
+        <h2 class="text-center mb-4 fade-in" style=" font-size: 2.5rem;">
+            <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Expense
+        </h2>
+        <!-- Help Section -->
+        <div class="help-section">
+            <h6>Understanding Needs vs. Wants</h6>
+            <p><strong>Needs</strong> are essential expenses for survival (e.g., rent, groceries, utilities). <strong>Wants</strong> are non-essential expenses for enjoyment (e.g., dining out, entertainment). We follow the 50/30/20 rule: 50% of your income for needs, 30% for wants, and 20% for savings.</p>
+            <p><strong>Examples:</strong></p>
+            <ul>
+                <li><strong>Needs:</strong> Rent, groceries, transportation, utilities</li>
+                <li><strong>Wants:</strong> Dining out, movies, subscriptions, shopping</li>
+            </ul>
+        </div>
+
+        <form id="expense-form" method="POST" action="{{ url_for('add_expense', user_id=user.id) }}">
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount (Rs)</label>
+                <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount" step="0.01" min="0.01" value="{{ expense.amount if expense else '' }}" required>
+            </div>
+            <div class="mb-3 d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <label for="description" class="form-label">Description</label>
+                    <input type="text" id="description" name="description" class="form-control" placeholder="Add a note (e.g., Grocery shopping)" value="{{ expense.description if expense else '' }}">
+                </div>
+                <button type="button" id="chatbot-btn" class="chatbot-btn" onclick="openChatbot()">Not sure? Ask our chatbot!</button>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select" required>
+                    <option value="">Select a category</option>
+                    <option value="needs" {% if expense and expense.category == 'needs' %}selected{% endif %}>Needs</option>
+                    <option value="wants" {% if expense and expense.category == 'wants' %}selected{% endif %}>Wants</option>
+                    <option value="other" {% if expense and expense.category == 'other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" id="date" name="date" class="form-control" value="{{ expense.date if expense else today }}" required>
+            </div>
+            <input type="hidden" id="id" name="id" value="{{ expense.id if expense else '' }}">
+            <button type="submit" id="action-btn" class="btn btn-primary w-100">{{ 'Update Expense' if expense else 'Add Expense' }}</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+        <div class="expense-card">
+            <h5 class="text-center">Recent Expenses</h5>
+            {% if recent_expenses %}
+                {% for recent_expense in recent_expenses %}
+                <div class="card mb-2 p-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>{{ recent_expense.category|capitalize }}: Rs {{ recent_expense.amount|round(2) }} ({{ recent_expense.date }}) - {{ recent_expense.description if recent_expense.description else '' }}</span>
+                        <div>
+                            <a href="{{ url_for('edit_expense', user_id=user.id, id=recent_expense.id) }}" class="btn btn-sm btn-primary me-2">Edit</a>
+                            <form action="{{ url_for('delete_expense', user_id=user.id, id=recent_expense.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger me-2">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-center">No recent expenses found.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Function to open chatbot with pre-filled question
+    function openChatbot() {
+        const description = document.getElementById('description').value.trim() || 'this expense';
+        const question = encodeURIComponent(`Is ${description} a need or a want?`);
+        window.location.href = `{{ url_for('chatbot', user_id=user.id) }}?question=${question}`;
+    }
+
+    document.getElementById('amount').addEventListener('input', function() {
+        if (this.value <= 0) {
+            this.setCustomValidity('Amount must be a positive number');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    {% if not expense %}
+        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    {% endif %}
+</script>
+{% endblock %}

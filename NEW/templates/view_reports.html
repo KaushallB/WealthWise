@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}View Reports - WealthWise{% endblock %}
+
+{% block main_content %}
+<!-- First Row: Total Income, Total Expenses, Net Balance, Savings Rate -->
+<div class="row g-3 mb-3 justify-content-center">
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-success text-white text-center">
+            <div class="card-title fs-6">Total Income</div>
+            <h4 class="mb-1 text-white" id="totalIncome">Rs {{ total_income|default(0)|round(2) }}</h4>
+            <small>Monthly Income</small>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-danger text-white text-center">
+            <div class="card-title fs-6">Total Expenses</div>
+            <h4 class="mb-1 text-white" id="totalExpenses">Rs {{ total_exp|default(0)|round(2) }}</h4>
+            <small>This Month</small>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-info text-white text-center">
+            <div class="card-title fs-6">Net Balance</div>
+            <h4 class="mb-1 text-white" id="netBalance">Rs {{ (total_income|default(0) - total_exp|default(0))|round(2) }}</h4>
+            <small>Current Balance</small>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg-3">
+        <div class="card p-2 bg-warning text-white text-center" style="background:#EFB11D;">
+            <div class="card-title fs-6">Savings Rate</div>
+            <h4 class="mb-1 text-white" id="savingsRate">0%</h4>
+            <small>Percentage Saved</small>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row: Time Period Filter -->
+<div class="row mb-3 justify-content-center">
+    <div class="col-12">
+        <div class="card p-2">
+            <div class="card-title text-center fs-6">Filter by Time Period</div>
+            <div class="d-flex justify-content-center gap-2">
+                <button class="btn btn-outline-primary btn-sm active" onclick="filterByPeriod('all', this)">All Time</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('7days', this)">Last 7 Days</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('30days', this)">Last 30 Days</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('90days', this)">Last 3 Months</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('year', this)">This Year</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Third Row: Tabs -->
+<div class="row mb-3 justify-content-center">
+    <div class="col-12">
+        <div class="card p-2">
+            <ul class="nav nav-tabs justify-content-center" id="reportTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+                        <i class="bi bi-pie-chart"></i> Overview
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="trends-tab" data-bs-toggle="tab" data-bs-target="#trends" type="button" role="tab" aria-controls="trends" aria-selected="false">
+                        <i class="bi bi-graph-up"></i> Trends
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="categories-tab" data-bs-toggle="tab" data-bs-target="#categories" type="button" role="tab" aria-controls="categories" aria-selected="false">
+                        <i class="bi bi-bar-chart"></i> Categories
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="reportTabContent">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                    <div class="row g-3 mt-3">
+                        <div class="col-12 col-md-6">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Income vs Expenses</div>
+                                <canvas id="incomeExpenseChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Budget Allocation</div>
+                                <canvas id="budgetChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Trends Tab -->
+                <div class="tab-pane fade" id="trends" role="tabpanel" aria-labelledby="trends-tab">
+                    <div class="row g-3 mt-3">
+                        <div class="col-12">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Financial Trends Over Time</div>
+                                <canvas id="trendsChart" style="max-height: 400px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Monthly Comparison</div>
+                                <canvas id="monthlyChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Spending Pattern</div>
+                                <canvas id="spendingPatternChart" style="max-height: 300px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Categories Tab -->
+                <div class="tab-pane fade" id="categories" role="tabpanel" aria-labelledby="categories-tab">
+                    <div class="row g-3 mt-3">
+                        <div class="col-12 col-md-8">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Expense Categories</div>
+                                <canvas id="categoriesChart" style="max-height: 400px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="card p-2">
+                                <div class="card-title text-center fs-6">Category Breakdown</div>
+                                <ul id="categoryList" class="list-group">
+                                    <!-- Category items will be populated by JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Sample data - Replace with your actual data from Flask
+    const sampleData = {
+        totalIncome: {{ total_income|default(0) }},
+        totalExpenses: {{ total_exp|default(0) }},
+        transactions: [
+            {% for transaction in transactions %}
+            { date: '{{ transaction.date }}', type: '{{ transaction.type }}', category: '{{ transaction.category }}', amount: {{ transaction.amount }}, description: '{{ transaction.description }}' }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    };
+
+    let charts = {};
+    let filteredData = sampleData.transactions;
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+        updateMetrics();
+        initializeCharts();
+        updateTransactionsList();
+    });
+
+    function updateMetrics() {
+        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const balance = income - expenses;
+        const savingsRate = income > 0 ? ((balance / income) * 100).toFixed(1) : 0;
+
+        document.getElementById('totalIncome').textContent = `Rs ${income.toLocaleString()}`;
+        document.getElementById('totalExpenses').textContent = `Rs ${expenses.toLocaleString()}`;
+        document.getElementById('netBalance').textContent = `Rs ${balance.toLocaleString()}`;
+        document.getElementById('savingsRate').textContent = `${savingsRate}%`;
+    }
+
+    function initializeCharts() {
+        createIncomeExpenseChart();
+        createBudgetChart();
+        createTrendsChart();
+        createMonthlyChart();
+        createSpendingPatternChart();
+        createCategoriesChart();
+    }
+
+    function createIncomeExpenseChart() {
+        const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
+        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+        if (charts.incomeExpense) charts.incomeExpense.destroy();
+        charts.incomeExpense = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Income', 'Expenses'],
+                datasets: [{
+                    data: [income, expenses],
+                    backgroundColor: ['#28a745', '#dc3545'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `${tooltipItem.label}: Rs ${tooltipItem.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                animation: false // Prevent infinite loop
+            }
+        });
+    }
+
+    function createBudgetChart() {
+        const ctx = document.getElementById('budgetChart').getContext('2d');
+        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+
+        if (charts.budget) charts.budget.destroy();
+        charts.budget = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Needs (50%)', 'Wants (30%)', 'Savings (20%)'],
+                datasets: [{
+                    data: [income * 0.5, income * 0.3, income * 0.2],
+                    backgroundColor: ['#a084e8', '#4056A1', '#17a2b8'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { font: { size: 12 } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `${tooltipItem.label}: Rs ${tooltipItem.raw.toLocaleString()}`;
+                            }
+                        }
+                    }
+                },
+                animation: false // Prevent infinite loop
+            }
+        });
+    }
+
+    function createTrendsChart() {
+        const ctx = document.getElementById('trendsChart').getContext('2d');
+        const dailyData = {};
+        filteredData.forEach(transaction => {
+            const date = transaction.date;
+            if (!dailyData[date]) {
+                dailyData[date] = { income: 0, expenses: 0 };
+            }
+            if (transaction.type === 'income') {
+                dailyData[date].income += transaction.amount;
+            } else {
+                dailyData[date].expenses += transaction.amount;
+            }
+        });
+
+        const dates = Object.keys(dailyData).sort();
+        const incomeData = dates.map(date => dailyData[date].income);
+        const expenseData = dates.map(date => dailyData[date].expenses);
+
+        if (charts.trends) charts.trends.destroy();
+        charts.trends = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: incomeData,
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Expenses',
+                        data: expenseData,
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Amount (Rs)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Date' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
+                }
+            }
+        });
+    }
+
+    function createMonthlyChart() {
+        const ctx = document.getElementById('monthlyChart').getContext('2d');
+        if (charts.monthly) charts.monthly.destroy();
+        charts.monthly = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['May', 'Jun'],
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: [20000, sampleData.totalIncome],
+                        backgroundColor: '#28a745'
+                    },
+                    {
+                        label: 'Expenses',
+                        data: [15000, sampleData.totalExpenses],
+                        backgroundColor: '#dc3545'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Amount (Rs)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Month' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
+                }
+            }
+        });
+    }
+
+    function createSpendingPatternChart() {
+        const ctx = document.getElementById('spendingPatternChart').getContext('2d');
+        if (charts.spendingPattern) charts.spendingPattern.destroy();
+        charts.spendingPattern = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Needs', 'Wants', 'Savings', 'Emergency', 'Investment'],
+                datasets: [{
+                    label: 'Current',
+                    data: [70, 40, 60, 30, 20],
+                    borderColor: '#a084e8',
+                    backgroundColor: 'rgba(160, 132, 232, 0.2)'
+                }, {
+                    label: 'Target',
+                    data: [50, 30, 80, 50, 40],
+                    borderColor: '#17a2b8',
+                    backgroundColor: 'rgba(23, 162, 184, 0.2)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: 'Percentage' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
+                }
+            }
+        });
+    }
+
+    function createCategoriesChart() {
+        const ctx = document.getElementById('categoriesChart').getContext('2d');
+        const categoryData = {};
+        filteredData.filter(t => t.type === 'expense').forEach(transaction => {
+            categoryData[transaction.category] = (categoryData[transaction.category] || 0) + transaction.amount;
+        });
+
+        const categories = Object.keys(categoryData);
+        const amounts = Object.values(categoryData);
+        const colors = ['#a084e8', '#4056A1', '#DA7B93', '#EDC7B7', '#17a2b8'];
+
+        if (charts.categories) charts.categories.destroy();
+        charts.categories = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: categories,
+                datasets: [{
+                    label: 'Amount Spent',
+                    data: amounts,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    y: { title: { display: true, text: 'Category' } },
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Amount (Rs)' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Update category list
+        const categoryList = document.getElementById('categoryList');
+        categoryList.innerHTML = '';
+        categories.forEach((category, index) => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `${category}: Rs ${amounts[index].toLocaleString()}`;
+            categoryList.appendChild(li);
+        });
+    }
+
+    function filterByPeriod(period, button) {
+        const buttons = document.querySelectorAll('.btn-outline-primary');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        const today = new Date();
+        filteredData = sampleData.transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            switch (period) {
+                case '7days': return (today - transactionDate) <= 7 * 24 * 60 * 60 * 1000;
+                case '30days': return (today - transactionDate) <= 30 * 24 * 60 * 60 * 1000;
+                case '90days': return (today - transactionDate) <= 90 * 24 * 60 * 60 * 1000;
+                case 'year': return transactionDate.getFullYear() === today.getFullYear();
+                default: return true;
+            }
+        });
+        updateMetrics();
+        reinitializeCharts();
+        updateTransactionsList();
+    }
+
+    function reinitializeCharts() {
+        createIncomeExpenseChart();
+        createBudgetChart();
+        createTrendsChart();
+        createMonthlyChart();
+        createSpendingPatternChart();
+        createCategoriesChart();
+    }
+
+</script>
+{% endblock %}

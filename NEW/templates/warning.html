@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Budget Warning</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background-color: white; padding: 20px; border-radius: 10px; border: 2px solid #e74c3c;">
+    <div style="text-align: center;">
+      <img src="https://imgur.com/KREAI4T.png" alt="WealthWise Logo" style="width: 150px; margin-bottom: 20px;">
+    </div>
+    <h2 style="color: #e74c3c;"> ⚠️ Budget Warning,  {{ full_name }}!⚠️</h2>
+    <p style="font-size: 16px; color: #555;">Your spending on <strong>{{ category }}</strong>  <strong>{{ status }}</strong> your allocated budget. Immediate action is recommended to stay on track. </p>
+    <p style="font-size: 16px; color: #555;"><strong>Details:</strong></p>
+    <ul style="font-size: 16px; color: #555;">
+      <li>Spent: <span style="color: #e74c3c;">Rs {{ spent | round(2) }}</span></li>
+      <li>Budget Limit: Rs {{ limit | round(2) }}</li>
+      <li>Percentage Used: <span style="color: #e74c3c;">{{ percent | round(2) }}%</span></li>
+    </ul>
+    <p style="font-size: 16pax; color: #555; margin-top: 20px;">
+      Please review your expenses in the WealthWise dashboard to manage your budget effectively.
+    </p>
+    <div style="text-align: center; margin-top: 30px;">
+      <a href="{{ url_for('dashboard', user_id=user_id, _external=True) }}" style="background-color: #e74c3c; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-size: 16px;">Go to Dashboard</a>
+    </div>
+    <p style="margin-top: 30px; font-size: 14px; color: #aaa; text-align: center;">© 2025 WealthWise. All rights reserved.</p>
+  </div>
+</body>
+</html>
