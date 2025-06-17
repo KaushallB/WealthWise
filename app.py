@@ -1046,11 +1046,13 @@ def visualize(user_id):
 
 @app.route('/view_reports/<int:user_id>')
 def view_reports(user_id):
+    
     if not is_logged_in():
-        flash('Please log in to view reports.', 'danger')
+        flash('Please log in to access the reports.', 'danger')
         return redirect(url_for('login'))
+
     if session['user_id'] != user_id:
-        flash('You are not authorized to view these reports.', 'danger')
+        flash('You are not authorized to access these reports.', 'danger')
         return redirect(url_for('logout'))
     
     try:
@@ -1062,39 +1064,88 @@ def view_reports(user_id):
             flash('User not found', 'danger')
             return redirect(url_for('login'))
         
-        cursor.execute('''SELECT transaction_type, category, amount, date, description 
-                         FROM transactions 
-                         WHERE user_id=%s 
-                         ORDER BY date DESC''', (user_id,))
+        # Get all transactions for the user
+        cursor.execute('''SELECT transaction_type, category, amount, date, description
+                       FROM transactions
+                       WHERE user_id=%s
+                       ORDER BY date DESC''', (user_id,))
         transactions = cursor.fetchall()
         
+        # Calculate totals
         total_income = Decimal('0.0')
-        total_exp = Decimal('0.0')
+        total_expenses = Decimal('0.0')
+        needs_spent = Decimal('0.0')
+        wants_spent = Decimal('0.0')
+        savings_saved = Decimal('0.0')
         
+        # Process transactions
         for transaction in transactions:
             amount = transaction['amount']
-            if transaction['transaction_type'] == 'income':
+            transaction_type = transaction['transaction_type']
+            category = transaction['category'].lower()
+            
+            if transaction_type == 'income':
                 total_income += amount
-            elif transaction['transaction_type'] == 'expense':
-                total_exp += amount
+                if category == 'savings':
+                    savings_saved += amount
+            elif transaction_type == 'expense':
+                total_expenses += amount
+                if category == 'needs':
+                    needs_spent += amount
+                elif category == 'wants':
+                    wants_spent += amount
         
-        # Prepare transactions data compatible with the template's JavaScript
-        transactions_list = [
-            {
+        # Calculate net balance
+        net_balance = total_income - total_expenses
+        
+        # Get budget allocations
+        cursor.execute('SELECT * FROM budget_allocations WHERE user_id=%s', (user_id,))
+        budget = cursor.fetchone()
+        
+        # Use default percentages if no budget exists
+        if not budget:
+            needs_percent = Decimal('50.00')
+            wants_percent = Decimal('30.00')
+            savings_percent = Decimal('20.00')
+        else:
+            needs_percent = Decimal(budget['needs_percent']) if budget.get('needs_percent') else Decimal('50.00')
+            wants_percent = Decimal(budget['wants_percent']) if budget.get('wants_percent') else Decimal('30.00')
+            savings_percent = Decimal(budget['savings_percent']) if budget.get('savings_percent') else Decimal('20.00')
+        
+        # Calculate budget limits
+        needs_budget = (needs_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
+        wants_budget = (wants_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
+        savings_budget = (savings_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
+        
+        # Format transactions for JavaScript
+        formatted_transactions = []
+        for transaction in transactions:
+            formatted_transactions.append({
                 'date': transaction['date'].strftime('%Y-%m-%d'),
                 'type': transaction['transaction_type'],
                 'category': transaction['category'],
                 'amount': float(transaction['amount']),
-                'description': transaction['description'] or ''
-            } for transaction in transactions
-        ]
+                'description': transaction['description']
+            })
         
-        return render_template('view_reports.html', user=user, total_income=total_income, total_exp=total_exp, transactions=transactions_list)
+        return render_template('view_reports.html', 
+                             user=user,
+                             username=user['full_name'],
+                             total_income=float(total_income),
+                             total_expenses=float(total_expenses),
+                             net_balance=float(net_balance),
+                             needs_spent=float(needs_spent),
+                             wants_spent=float(wants_spent),
+                             savings_saved=float(savings_saved),
+                             needs_budget=float(needs_budget),
+                             wants_budget=float(wants_budget),
+                             savings_budget=float(savings_budget),
+                             transactions=formatted_transactions)
     
     except Exception as e:
         flash(f"Error loading reports: {e}", 'danger')
         mysql.connection.rollback()
-        return redirect(url_for('dashboard', user_id=user_id))
+        return redirect(url_for('login'))
     finally:
         cursor.close()
        
