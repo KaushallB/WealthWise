@@ -16,6 +16,7 @@ from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 import random 
 import string
+import time
 
 
 
@@ -213,16 +214,11 @@ def verify_otp():
             full_name = otp_data['full_name']
             session.pop('otp_data', None)
             
-            try:
-                msg = Message("Login Notification", recipients=[email])
-                msg.html = render_template("welcome_login.html", full_name=full_name)
-                mail.send(msg)
-            except Exception as email_error:
-                flash(f'Error sending welcome email: {str(email_error)}', 'warning')
-
             flash('Login Successful', 'success')
             return redirect(url_for('dashboard', user_id=otp_data['user_id']))
+        
         else:
+            
             if otp_data['attempts'] >= 5:
                 otp_data['lockout_time'] = (datetime.now() + timedelta(minutes=5)).timestamp()
                 session['otp_data'] = otp_data
@@ -418,6 +414,7 @@ def logout():
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
 
+#DASHBOARD
 @app.route('/dashboard/<int:user_id>')
 def dashboard(user_id):
     
@@ -478,7 +475,7 @@ def dashboard(user_id):
             cursor.execute('SELECT * FROM budget_allocations WHERE user_id=%s', (user_id,))
             budget = cursor.fetchone()
             
-        # CHANGED: Use Decimal for budget defaults and validate percentages
+        # Use Decimal for budget defaults and validate percentages
         if not budget:
             budget = {
                 'needs_percent': Decimal('50.00'),
@@ -488,61 +485,75 @@ def dashboard(user_id):
             }
             print(f"Warning: Budget allocation not created for user {user_id}, using default 50/30/20")
         
-        # CHANGED: Validate budget percentages to prevent zero or null values
+        #  Validate budget percentages to prevent zero or null values
         needs_percent = Decimal(budget['needs_percent']) if budget.get('needs_percent') else Decimal('50.00')
         wants_percent = Decimal(budget['wants_percent']) if budget.get('wants_percent') else Decimal('30.00')
         savings_percent = Decimal(budget['savings_percent']) if budget.get('savings_percent') else Decimal('20.00')
         
-        # CHANGED: Ensure limits are calculated safely
+        # Ensure limits are calculated safely
         needs_limit = (needs_percent / 100) * total_income if needs_percent > 0 else Decimal('0.0')
         wants_limit = (wants_percent / 100) * total_income if wants_percent > 0 else Decimal('0.0')
         
         needs_spent_percent = Decimal('0.0')
         wants_spent_percent = Decimal('0.0')
         
-        # CHANGED: Only calculate percentages if all conditions are strictly met
+        # Only calculate percentages if all conditions are strictly met
         if total_income > 0 and needs_limit > 0 and needs_percent > 0:
             needs_spent_percent = (needs_spent / needs_limit) * 100
         if total_income > 0 and wants_limit > 0 and wants_percent > 0:
             wants_spent_percent = (wants_spent / wants_limit) * 100
         
         warning_per = Decimal('80.0')
-        email_sent = False
+        email_sent_needs = False
+        email_sent_wants=False
         
-        # CHANGED: Only send warnings if calculations are valid
+        #Checking if warning email has already been sent using a session flag
+        if 'budget_warning_sent' not in session:
+            session['budget_warning_sent'] = {'needs': False, 'wants': False}
+            
+        # Only send warnings if calculations are valid
         if total_income > 0 and needs_limit > 0 and needs_percent > 0 and needs_spent_percent > warning_per:
             status = "Exceeded" if needs_spent_percent >= 100 else "Approaching"
             msg = Message(f"Budget Warning: Needs Spending {status.capitalize()}", recipients=[user['email']])
-            msg.html = render_template(
-                "warning.html",
-                user_id=user['id'],
-                full_name=user['full_name'],
-                category="Needs",
-                spent=needs_spent,
-                limit=needs_limit,
-                percent=needs_spent_percent,
-                status=status
-            )
-            mail.send(msg)
-            email_sent = True
+            try:  
+                msg.html = render_template(
+                    "warning.html",
+                    user_id=user['id'],
+                    full_name=user['full_name'],
+                    category="Needs",
+                    spent=needs_spent,
+                    limit=needs_limit,
+                    percent=needs_spent_percent,
+                    status=status
+                )
+                mail.send(msg)
+                session['budget_warning_sent']['needs']=True
+                email_sent_needs = True
+            except Exception as email_error:
+                flash(f'Error sending wants warning email: {str(email_error)}', 'warning')   
             
         if total_income > 0 and wants_limit > 0 and wants_percent > 0 and wants_spent_percent >= warning_per:
             status = "Has Exceeded" if wants_spent_percent >= 100 else "Is Approaching"
-            msg = Message(f"Budget Warning: Wants Spending {status.capitalize()}", recipients=[user['email']])
-            msg.html = render_template(
-                "warning.html",
-                user_id=user['id'],
-                full_name=user['full_name'],
-                category="Wants",
-                spent=wants_spent,
-                limit=wants_limit,
-                percent=wants_spent_percent,
-                status=status
-            )
-            mail.send(msg)
-            email_sent = True
-        
-        if email_sent:
+            try:
+                msg = Message(f"Budget Warning: Wants Spending {status.capitalize()}", recipients=[user['email']])
+                msg.html = render_template(
+                    "warning.html",
+                    user_id=user['id'],
+                    full_name=user['full_name'],
+                    category="Wants",
+                    spent=wants_spent,
+                    limit=wants_limit,
+                    percent=wants_spent_percent,
+                    status=status
+                )
+                mail.send(msg)
+                session['budget_warning_sent']['wants'] = True
+                email_sent_wants = True
+               
+            except Exception as email_error:
+                flash(f'Error sending wants warning email: {str(email_error)}', 'warning')   
+                       
+        if email_sent_needs or email_sent_wants:
             flash('Warning: You have been notified via email about your budget limits.', 'warning')
         
         return render_template('dashboard.html', user=user, total_income=total_income, total_exp=total_exp, needs_spent=needs_spent, wants_spent=wants_spent, savings_saved=savings_saved, budget=budget)
@@ -558,7 +569,7 @@ def dashboard(user_id):
 model = OllamaLLM(model="llama3",use_gpu=False)
 
 
-
+#CHATBOT
 @app.route('/chatbot/<int:user_id>', methods=['GET', 'POST'])
 def chatbot(user_id):
     if not is_logged_in():
@@ -653,6 +664,7 @@ def chatbot(user_id):
     except Exception as e:
         return jsonify({'response': f'Error: {str(e)}'}), 500
 
+#ADDINCOME
 @app.route('/add_income/<int:user_id>',methods=['GET','POST'])
 def add_income(user_id):
     if not is_logged_in or session['user_id']!=user_id:
@@ -702,7 +714,8 @@ def add_income(user_id):
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
-    
+
+#EDITINCOME 
 @app.route('/edit_income/<int:user_id>/<int:income_id>', methods=['GET'])
 def edit_income(user_id, income_id):
     if not is_logged_in() or session['user_id'] != user_id:
@@ -732,7 +745,8 @@ def edit_income(user_id, income_id):
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('dashboard', user_id=user_id))
-  
+ 
+#DELETEINCOME  
 @app.route('/delete_income/<int:user_id>/<int:income_id>', methods=['POST'])
 def delete_income(user_id, income_id):
     if not is_logged_in() or session['user_id'] != user_id:
@@ -757,7 +771,8 @@ def delete_income(user_id, income_id):
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('add_income', user_id=user_id))
-  
+
+#ADDEXPENSE
 @app.route('/add_expense/<int:user_id>',methods=['GET','POST'])
 def add_expense(user_id):
     if not is_logged_in() or session['user_id']!=user_id:
@@ -811,7 +826,8 @@ def add_expense(user_id):
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('login'))
-    
+
+#EDITEXPENSE
 @app.route('/edit_expense/<int:user_id>/<int:id>', methods=['GET'])
 def edit_expense(user_id, id):
     if not is_logged_in() or session['user_id'] != user_id:
@@ -844,6 +860,7 @@ def edit_expense(user_id, id):
     finally:
         cursor.close()
 
+#DELETEEXPENSE
 @app.route('/delete_expense/<int:user_id>/<int:id>', methods=['POST'])
 def delete_expense(user_id, id):
     if not is_logged_in() or session['user_id'] != user_id:
@@ -870,6 +887,7 @@ def delete_expense(user_id, id):
     finally:
         cursor.close()
 
+#VISUALIZEREPORTS
 @app.route('/visualize/<int:user_id>')
 def visualize(user_id):
     if not is_logged_in() or session['user_id'] != user_id:
@@ -1044,6 +1062,7 @@ def visualize(user_id):
     finally:
         cursor.close()
 
+#VIEWREPORTS
 @app.route('/view_reports/<int:user_id>')
 def view_reports(user_id):
     
@@ -1148,6 +1167,8 @@ def view_reports(user_id):
         return redirect(url_for('login'))
     finally:
         cursor.close()
-       
+    
 if __name__ == '__main__':
     app.run(debug=True)
+    
+    
