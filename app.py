@@ -922,8 +922,8 @@ def visualize(user_id):
             return redirect(url_for('dashboard', user_id=user_id))
 
         # Create directories
-        reports_dir = os.path.join('static', 'reports')
-        charts_dir = os.path.join('static', 'charts')
+        reports_dir = os.path.join('Offlinereports', 'reports')
+        charts_dir = os.path.join('Offlinereports', 'charts')
         os.makedirs(reports_dir, exist_ok=True)
         os.makedirs(charts_dir, exist_ok=True)
 
@@ -949,8 +949,8 @@ def visualize(user_id):
 
         print(f"Excel file saved to: {excel_path}")
 
-        # Generate charts with error handling
-        plt.style.use('default')  # Use default style to avoid seaborn issues
+        # Generating charts with error handling
+        plt.style.use('default')  # Using default style to avoid seaborn issues
         
         # Chart 1: Expense distribution
         expenses_df = df[df['transaction_type'] == 'expense'].copy()
@@ -978,7 +978,7 @@ def visualize(user_id):
             ax2.set_xticks(range(len(monthly_expenses)))
             ax2.set_xticklabels([str(month) for month in monthly_expenses.index], rotation=45)
             
-            # Add value labels on bars
+            # Adding value labels on bars
             for bar in bars:
                 height = bar.get_height()
                 ax2.text(bar.get_x() + bar.get_width()/2., height + height*0.01,
@@ -1019,6 +1019,7 @@ def visualize(user_id):
             ax4.grid(alpha=0.3)
 
         plt.tight_layout()
+        
         chart_filename = f'{full_name}_financial_overview.png'
         chart_path = os.path.join(charts_dir, chart_filename)
         plt.savefig(chart_path, dpi=300, bbox_inches='tight')

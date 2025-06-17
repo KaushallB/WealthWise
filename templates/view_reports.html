@@ -141,7 +141,7 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Sample data - Replace with your actual data from Flask
+    // Data from Flask
     const sampleData = {
         totalIncome: {{ total_income|default(0) }},
         totalExpenses: {{ total_exp|default(0) }},
@@ -153,7 +153,7 @@
     };
 
     let charts = {};
-    let filteredData = sampleData.transactions;
+    let filteredData = [...sampleData.transactions]; // Initialize with all transactions
 
     // Initialize the page
     document.addEventListener('DOMContentLoaded', function() {
@@ -185,8 +185,8 @@
 
     function createIncomeExpenseChart() {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
-        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) || 0;
+        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0) || 0;
 
         if (charts.incomeExpense) charts.incomeExpense.destroy();
         charts.incomeExpense = new Chart(ctx, {
@@ -216,14 +216,14 @@
                         }
                     }
                 },
-                animation: false // Prevent infinite loop
+                animation: false
             }
         });
     }
 
     function createBudgetChart() {
         const ctx = document.getElementById('budgetChart').getContext('2d');
-        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) || 0;
 
         if (charts.budget) charts.budget.destroy();
         charts.budget = new Chart(ctx, {
@@ -252,7 +252,7 @@
                         }
                     }
                 },
-                animation: false // Prevent infinite loop
+                animation: false
             }
         });
     }
@@ -321,20 +321,37 @@
 
     function createMonthlyChart() {
         const ctx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyData = {};
+        filteredData.forEach(transaction => {
+            const month = new Date(transaction.date).toLocaleString('default', { month: 'short', year: 'numeric' });
+            if (!monthlyData[month]) {
+                monthlyData[month] = { income: 0, expenses: 0 };
+            }
+            if (transaction.type === 'income') {
+                monthlyData[month].income += transaction.amount;
+            } else {
+                monthlyData[month].expenses += transaction.amount;
+            }
+        });
+
+        const months = Object.keys(monthlyData);
+        const incomeData = months.map(month => monthlyData[month].income);
+        const expenseData = months.map(month => monthlyData[month].expenses);
+
         if (charts.monthly) charts.monthly.destroy();
         charts.monthly = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['May', 'Jun'],
+                labels: months,
                 datasets: [
                     {
                         label: 'Income',
-                        data: [20000, sampleData.totalIncome],
+                        data: incomeData,
                         backgroundColor: '#28a745'
                     },
                     {
                         label: 'Expenses',
-                        data: [15000, sampleData.totalExpenses],
+                        data: expenseData,
                         backgroundColor: '#dc3545'
                     }
                 ]
@@ -360,19 +377,33 @@
 
     function createSpendingPatternChart() {
         const ctx = document.getElementById('spendingPatternChart').getContext('2d');
+        const categories = ['Needs', 'Wants', 'Savings', 'Emergency', 'Investment'];
+        const currentData = categories.map(() => 0);
+        const targetData = [50, 30, 20, 0, 0]; // Default target percentages
+
+        filteredData.filter(t => t.type === 'expense').forEach(transaction => {
+            const catIndex = categories.indexOf(transaction.category);
+            if (catIndex !== -1) {
+                currentData[catIndex] += transaction.amount;
+            }
+        });
+
+        const totalExpenses = currentData.reduce((sum, val) => sum + val, 0);
+        const normalizedCurrent = totalExpenses ? currentData.map(val => (val / totalExpenses) * 100) : currentData;
+
         if (charts.spendingPattern) charts.spendingPattern.destroy();
         charts.spendingPattern = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['Needs', 'Wants', 'Savings', 'Emergency', 'Investment'],
+                labels: categories,
                 datasets: [{
                     label: 'Current',
-                    data: [70, 40, 60, 30, 20],
+                    data: normalizedCurrent,
                     borderColor: '#a084e8',
                     backgroundColor: 'rgba(160, 132, 232, 0.2)'
                 }, {
                     label: 'Target',
-                    data: [50, 30, 80, 50, 40],
+                    data: targetData,
                     borderColor: '#17a2b8',
                     backgroundColor: 'rgba(23, 162, 184, 0.2)'
                 }]
@@ -475,5 +506,10 @@
         createCategoriesChart();
     }
 
+    // Function to update transactions list (placeholder)
+    function updateTransactionsList() {
+        // This can be expanded to display transactions if needed
+        console.log('Transactions filtered:', filteredData);
+    }
 </script>
 {% endblock %}
