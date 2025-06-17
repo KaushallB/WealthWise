@@ -1,16 +1,14 @@
 import time
 from datetime import datetime
-from flask import Flask, render_template, render_template_string
+from flask import Flask, render_template
 from flask_mail import Mail, Message
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from decimal import Decimal
-import os
 
-# Create separate Flask app for scheduler
 app = Flask(__name__)
 
-# Copy your configuration from main app
+
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
@@ -44,7 +42,7 @@ def send_daily_reminders():
                     full_name = user['full_name']
                     email = user['email']
                     
-                    # Get user's financial data
+                    # Getting user's financial data
                     cursor.execute('''SELECT transaction_type, category, SUM(amount) as total
                                    FROM transactions
                                    WHERE user_id=%s
@@ -71,15 +69,15 @@ def send_daily_reminders():
                             elif category == 'wants':
                                 wants_spent += amount
                     
-                    # Calculate budgets (50/30/20 rule)
+                    # Calculating budgets (50/30/20 rule)
                     needs_budget = Decimal('50.00') / 100 * total_income if total_income > 0 else Decimal('0.0')
                     wants_budget = Decimal('30.00') / 100 * total_income if total_income > 0 else Decimal('0.0')
                     savings_budget = Decimal('20.00') / 100 * total_income if total_income > 0 else Decimal('0.0')
                     
-                    # Send email using template
+                    # Sending email using template
                     msg = Message("Daily WealthWise Reminder", recipients=[email])
                     
-                    # Try to use template file first, fall back to string template
+                   
                     try:
                         msg.html = render_template('daily_update.html',
                                                      full_name=full_name,
@@ -119,7 +117,7 @@ def run_scheduler():
             current_time = datetime.now()
             current_date = current_time.date()
             
-            # Send between 2:15 PM and 2:20 PM (5-minute window)
+            # Send between Time
             if (current_time.hour == 15 and 
                 15 <= current_time.minute <= 20 and 
                 last_sent_date != current_date):
