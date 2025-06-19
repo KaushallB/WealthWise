@@ -958,21 +958,39 @@ def visualize(user_id):
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Transactions', index=False)
             
-            # Add summary sheet
+            # Adding summary sheet
             summary_data = []
             total_income = df[df['transaction_type'] == 'income']['amount'].sum()
             total_expenses = df[df['transaction_type'] == 'expense']['amount'].sum()
-            
+
             summary_data.append(['Total Income', f'Rs {total_income:.2f}'])
             summary_data.append(['Total Expenses', f'Rs {total_expenses:.2f}'])
-            summary_data.append(['Net Balance', f'Rs {(total_income - total_expenses):.2f}'])
-            
+
+            # Handling net balance properly - only add once
+            net_balance = total_income - total_expenses
+            if net_balance < 0:
+                summary_data.append(['Net Balance', f'Deficit: Rs {abs(net_balance):.2f}'])
+                summary_data.append(['Status', 'OVERSPENDING'])
+                summary_data.append(['Recommended Action', 'Reduce expenses or increase income'])
+            else:
+                summary_data.append(['Net Balance', f'Rs {net_balance:.2f}'])
+                summary_data.append(['Status', 'HEALTHY'])
+
+            # Adding additional insights
+            if total_income > 0:
+                expense_ratio = (total_expenses / total_income) * 100
+                summary_data.append(['Expense Ratio', f'{expense_ratio:.1f}%'])
+                
+                savings_rate = ((total_income - total_expenses) / total_income) * 100
+                if savings_rate >= 0:
+                    summary_data.append(['Savings Rate', f'{savings_rate:.1f}%'])
+
             summary_df = pd.DataFrame(summary_data, columns=['Category', 'Amount'])
             summary_df.to_excel(writer, sheet_name='Summary', index=False)
 
         print(f"Excel file saved to: {excel_path}")
 
-        # Generating charts with error handling
+        # Generating charts with error handlingW
         plt.style.use('default')  # Using default style to avoid seaborn issues
         
         # Chart 1: Expense distribution
