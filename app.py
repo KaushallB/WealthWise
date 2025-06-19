@@ -18,7 +18,7 @@ from langchain_ollama import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
 import random 
 import string
-import time
+from datetime import datetime
 
 
 
@@ -668,55 +668,68 @@ def chatbot(user_id):
         return jsonify({'response': f'Error: {str(e)}'}), 500
 
 #ADDINCOME
-@app.route('/add_income/<int:user_id>',methods=['GET','POST'])
+@app.route('/add_income/<int:user_id>', methods=['GET','POST'])
 def add_income(user_id):
-    if not is_logged_in or session['user_id']!=user_id:
-        flash('Please log in to add income','danger')
-        return redirect(url_for('logout'))
-    
-    try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM users WHERE id=%s',(user_id,))
-        user=cursor.fetchone()
-        if not user:
-            flash('User not found','danger')
-            return redirect(url_for('login'))
+    if not is_logged_in():
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
 
-        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC LIMIT 5", (user_id,))
-        recent_incomes = cursor.fetchall()
+    if session['user_id'] != user_id:
+        flash('You are not authorized to access this page.', 'danger')
+        return redirect(url_for('logout'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+    
+    if request.method == 'POST':
+        amount = request.form.get('amount')
+        category = request.form.get('category')
+        date_str = request.form.get('date')  
+        description = request.form.get('description')
+        income_id = request.form.get('id')
         
-        if request.method=='POST':
-            amount = request.form.get('amount')
-            category = request.form.get('category')
-            date = request.form.get('date')
-            description = request.form.get('description')
-            income_id = request.form.get('id')
-            
-            if not amount or not category or not date:
-                flash('All fields are required.', 'danger')
+        if not amount or not category or not date_str:
+            flash('All fields are required.', 'danger')
+        else:
+            try:
+                # Converting date string to datetime with current time
+                from datetime import datetime
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                current_time = datetime.now().time()
+                full_datetime = datetime.combine(date_obj.date(), current_time)
                 
-            else:
                 if income_id:
+                    # Updating existing income
                     cursor.execute(
                         "UPDATE transactions SET amount=%s, category=%s, date=%s, description=%s WHERE id=%s AND user_id=%s",
-                        (Decimal(amount), category, date, description, income_id, user_id)
+                        (Decimal(amount), category, full_datetime, description, income_id, user_id)
                     )
-                    mysql.connection.commit()
                     flash('Income updated successfully!', 'success')
-                else: 
+                else:
+                    # Adding new income
                     cursor.execute(
                         "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'income', %s, %s, %s, %s)",
-                        (user_id, category, Decimal(amount), date, description)
+                        (user_id, category, Decimal(amount), full_datetime, description)
                     )
-                    mysql.connection.commit()
                     flash('Income added successfully!', 'success')
+                
+                mysql.connection.commit()
                 return redirect(url_for('add_income', user_id=user_id))
-        today=datetime.now().strftime('%Y-%m-%d')
-        return render_template('add_income.html', user=user, today=today, recent_incomes=recent_incomes, income=None)
+                
+            except Exception as e:
+                flash(f'Error adding income: {str(e)}', 'danger')
+                print(f"Error in add_income: {str(e)}")
+
+    # Getting recent income transactions
+    cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC LIMIT 5", (user_id,))
+    recent_incomes = cursor.fetchall()
+
+    # Getting user info
+    cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+    user = cursor.fetchone()
     
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('dashboard', user_id=user_id))
+    cursor.close()
+    return render_template('add_income.html', user=user, recent_incomes=recent_incomes)
+
 
 #EDITINCOME 
 @app.route('/edit_income/<int:user_id>/<int:income_id>', methods=['GET'])
@@ -776,59 +789,66 @@ def delete_income(user_id, income_id):
         return redirect(url_for('add_income', user_id=user_id))
 
 #ADDEXPENSE
-@app.route('/add_expense/<int:user_id>',methods=['GET','POST'])
+@app.route('/add_expense/<int:user_id>', methods=['GET','POST'])
 def add_expense(user_id):
-    if not is_logged_in() or session['user_id']!=user_id:
-        flash('Please login to add expense','danger')
-        return redirect(url_for('logout')) 
+    if not is_logged_in():
+        flash('Please log in to access this page.', 'danger')
+        return redirect(url_for('login'))
+
+    if session['user_id'] != user_id:
+        flash('You are not authorized to access this page.', 'danger')
+        return redirect(url_for('logout'))
+
+    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
     
-    try:
-        cursor=mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM users where id=%s',(user_id,))
-        user=cursor.fetchone()
+    if request.method == 'POST':
+        amount = request.form.get('amount')
+        category = request.form.get('category')
+        date_str = request.form.get('date')  
+        description = request.form.get('description')
+        expense_id = request.form.get('id')
         
-        if not user:
-            flash('User not found','danger')
-            return redirect(url_for('login'))
-        
-        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC LIMIT 5",(user_id,))
-        recent_exp=cursor.fetchall()
-        
-        if request.method=='POST':
-            amount=request.form.get('amount')
-            category=request.form.get('category')
-            date=request.form.get('date')
-            descrip=request.form.get('description','')
-            expense_id=request.form.get('id')
-            
-            if not amount or not category or not date:
-                flash('Amount, category, and date are required.', 'danger')
-            else:
-               if expense_id:
+        if not amount or not category or not date_str:
+            flash('All fields are required.', 'danger')
+        else:
+            try:
+                # Converting date string to datetime with current time
+                date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                current_time = datetime.now().time()
+                full_datetime = datetime.combine(date_obj.date(), current_time)
+                
+                if expense_id:
+                    # Updating existing expense
                     cursor.execute(
                         "UPDATE transactions SET amount=%s, category=%s, date=%s, description=%s WHERE id=%s AND user_id=%s",
-                        (Decimal(amount), category, date, descrip, expense_id, user_id)
+                        (Decimal(amount), category, full_datetime, description, expense_id, user_id)
                     )
-                    mysql.connection.commit()
                     flash('Expense updated successfully!', 'success')
-               else:
+                else:
+                    # Adding new expense
                     cursor.execute(
                         "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'expense', %s, %s, %s, %s)",
-                        (user_id, category, Decimal(amount), date, descrip)
+                        (user_id, category, Decimal(amount), full_datetime, description)
                     )
-                    mysql.connection.commit()
                     flash('Expense added successfully!', 'success')
-                    
-            return redirect(url_for('add_expense', user_id=user_id))
-                  
                 
-        
-        today=datetime.now().strftime('%Y-%m-%d')
-        return render_template('add_expense.html', user=user, today=today, recent_expenses=recent_exp, expense=None)
-             
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('login'))
+                mysql.connection.commit()
+                return redirect(url_for('add_expense', user_id=user_id))
+                
+            except Exception as e:
+                flash(f'Error adding expense: {str(e)}', 'danger')
+                print(f"Error in add_expense: {str(e)}")
+
+    # Getting recent expense transactions
+    cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC LIMIT 5", (user_id,))
+    recent_expenses = cursor.fetchall()
+
+    # Getting user info
+    cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+    user = cursor.fetchone()
+    
+    cursor.close()
+    return render_template('add_expense.html', user=user, recent_expenses=recent_expenses)
 
 #EDITEXPENSE
 @app.route('/edit_expense/<int:user_id>/<int:id>', methods=['GET'])
@@ -890,9 +910,7 @@ def delete_expense(user_id, id):
     finally:
         cursor.close()
 
-#VISUALIZEREPORTS
-
-
+#GENERATEREPORTS
 @app.route('/visualize/<int:user_id>')
 def visualize(user_id):
     if not is_logged_in() or session['user_id'] != user_id:
