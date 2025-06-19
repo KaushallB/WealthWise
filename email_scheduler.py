@@ -112,16 +112,16 @@ def send_daily_reminders():
 def run_scheduler():
     last_sent_date = None
     print(f"WealthWise Email Scheduler started at {datetime.now()}")
-    print("Waiting for scheduled time (2:15-2:20 PM daily)...")
+    print("Waiting for scheduled time ")
     
     try:
         while True:
             current_time = datetime.now()
             current_date = current_time.date()
             
-            # Send between 2:15 PM and 2:20 PM (5-minute window)
-            if (current_time.hour == 15 and 
-                15 <= current_time.minute <= 20 and 
+            # Send between (5-minute window)
+            if (current_time.hour == 10 and 
+                23 <= current_time.minute <= 25 and 
                 last_sent_date != current_date):
                 
                 print(f"Triggering daily reminders at {current_time}")
