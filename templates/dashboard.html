@@ -71,12 +71,12 @@
                 {% if needs_limit_float == 0 %} #6c757d
                 {% elif needs_spent_float > needs_limit_float %} #dc3545
                 {% elif needs_limit_float > 0 and (needs_spent_float/needs_limit_float*100) > 80 %} #ffc107
-                {% else %} #28a745
+                {% else %} #FF7FAA
                 {% endif %};">
                 <div class="card-title fs-6 text-white">Needs Budget</div>
                 <h5 class="mb-1 text-white">Rs {{ needs_spent_float|round(2) }} / Rs {{ needs_limit_float|round(2) }}</h5>
-                <div class="progress mb-2" style="height: 10px;">
-                    <div class="progress-bar" style="width: {{ (needs_spent_float/needs_limit_float*100) if needs_limit_float > 0 else 0 }}%; background-color: white;"></div>
+                <div class="progress mb-2" style="height: 10px; background-color: white;">
+                    <div class="progress-bar" style="width: {{ (needs_spent_float/needs_limit_float*100) if needs_limit_float > 0 else 0 }}%; background-color: #FF7FEA;"></div>
                 </div>
                 <small class="text-white">
                     {% if needs_limit_float == 0 %}
@@ -100,8 +100,8 @@
                 {% endif %};">
                 <div class="card-title fs-6 text-white">Wants Budget</div>
                 <h5 class="mb-1 text-white">Rs {{ wants_spent_float|round(2) }} / Rs {{ wants_limit_float|round(2) }}</h5>
-                <div class="progress mb-2" style="height: 10px;">
-                    <div class="progress-bar" style="width: {{ (wants_spent_float/wants_limit_float*100) if wants_limit_float > 0 else 0 }}%; background-color: white;"></div>
+                <div class="progress mb-2" style="height: 10px; background-color:white">
+                    <div class="progress-bar" style="width: {{ (wants_spent_float/wants_limit_float*100) if wants_limit_float > 0 else 0 }}%; background-color: #7FFFD4;"></div>
                 </div>
                 <small class="text-white">
                     {% if wants_limit_float == 0 %}
@@ -120,8 +120,8 @@
                 {% set savings_target_float = savings_target|default(0)|float %}
                 {% set savings_made_float = savings_made|default(0)|float %}
                 <h5 class="mb-1">Rs {{ savings_made_float|round(2) }} / Rs {{ savings_target_float|round(2) }}</h5>
-                <div class="progress mb-2" style="height: 10px;">
-                    <div class="progress-bar bg-white" style="width: {{ (savings_made_float/savings_target_float*100) if savings_target_float > 0 else 0 }}%;"></div>
+                <div class="progress mb-2" style="height: 10px; background-color: white;">
+                    <div class="progress-bar" style="width: {{ (savings_made_float/savings_target_float*100) if savings_target_float > 0 else 0 }}%;   background-color: #40FF40;"></div>
                 </div>
                 <small>
                     {% if savings_target_float == 0 %}
@@ -155,9 +155,9 @@
 
 {% if needs_spent_float > needs_limit_float or wants_spent_float > wants_limit_float %}
 <div class="row mb-3">
-    <div class="col-12">
-        <div class="alert alert-danger align-items-center">
-            <h6>⚠️ Budget Alert!</h6>
+    <div class="col-12 text-center">
+        <div class="alert alert-danger ">
+            <h6>⚠️ Budget Alert! ⚠️</h6>
             {% if needs_spent_float > needs_limit_float %}
                 <p>• You've exceeded your Needs budget by Rs {{ (needs_spent_float - needs_limit_float)|round(2) }}</p>
             {% endif %}

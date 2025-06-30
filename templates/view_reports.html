@@ -3,8 +3,9 @@
 {% block title %}View Reports - WealthWise{% endblock %}
 
 {% block main_content %}
-<!-- First Row: Total Income, Total Expenses, Net Balance, Savings Rate, Budget Breakdown -->
+<!-- First Row: Total Income, Total Expenses, Net Balance, Savings Rate -->
 <div class="row g-3 mb-3 justify-content-center">
+    <!-- Total Income -->
     <div class="col-12 col-md-4 col-lg-3">
         <div class="card p-2 bg-success text-white text-center">
             <div class="card-title fs-6">Total Income</div>
@@ -12,6 +13,7 @@
             <small>Monthly Income</small>
         </div>
     </div>
+    <!-- Total Expenses -->
     <div class="col-12 col-md-4 col-lg-3">
         <div class="card p-2 bg-danger text-white text-center">
             <div class="card-title fs-6">Total Expenses</div>
@@ -19,98 +21,127 @@
             <small>This Month</small>
         </div>
     </div>
+    <!-- Savings Rate -->
     <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2 bg-info text-white text-center">
-            <div class="card-title fs-6">Net Balance</div>
-            <h4 class="mb-1 text-white" id="netBalance">Rs {{ (total_income|default(0) - total_exp|default(0))|round(2) }}</h4>
-            <small>Current Balance</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #FFD700; color: black;">
+        <div class="card p-2 text-white text-center" style="background-color:rgb(237, 199, 8);">
             <div class="card-title fs-6">Savings Rate</div>
-            <h4 class="mb-1" id="savingsRate">0%</h4>
-            <small>Percentage Saved</small>
-        </div>
-    </div>
-
-    <!-- Needs Budget Breakdown -->
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #28a745; color: white;">
-            <div class="card-title fs-6">Needs %</div>
-            <h4 class="mb-1 text-white" id="needsPercentage">50%</h4>
-            <small>Recommended Allocation</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #20c997; color: white;">
-            <div class="card-title fs-6">Needs Used</div>
-            <h4 class="mb-1 text-white" id="needsUsed">Rs 0</h4>
-            <small>Amount Spent</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #17a2b8; color: white;">
-            <div class="card-title fs-6">Needs Remaining</div>
-            <h4 class="mb-1 text-white" id="needsRemaining">Rs 0</h4>
-            <small>Amount Left</small>
-        </div>
-    </div>
-
-    <!-- Wants Budget Breakdown -->
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #6610f2; color: white;">
-            <div class="card-title fs-6">Wants %</div>
-            <h4 class="mb-1 text-white" id="wantsPercentage">30%</h4>
-            <small>Recommended Allocation</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #6f42c1; color: white;">
-            <div class="card-title fs-6">Wants Used</div>
-            <h4 class="mb-1 text-white" id="wantsUsed">Rs 0</h4>
-            <small>Amount Spent</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #5a189a; color: white;">
-            <div class="card-title fs-6">Wants Remaining</div>
-            <h4 class="mb-1 text-white" id="wantsRemaining">Rs 0</h4>
-            <small>Amount Left</small>
-        </div>
-    </div>
-
-    <!-- Savings Budget Breakdown -->
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #fd7e14; color: white;">
-            <div class="card-title fs-6">Savings %</div>
-            <h4 class="mb-1 text-white" id="savingsPercentage">20%</h4>
-            <small>Recommended Allocation</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #f8a52a; color: white;">
-            <div class="card-title fs-6">Savings Used</div>
-            <h4 class="mb-1 text-white" id="savingsUsed">Rs 0</h4>
-            <small>Amount Spent</small>
-        </div>
-    </div>
-    <div class="col-12 col-md-4 col-lg-3">
-        <div class="card p-2" style="background-color: #e07a5f; color: white;">
-            <div class="card-title fs-6">Savings Remaining</div>
-            <h4 class="mb-1 text-white" id="savingsRemaining">Rs 0</h4>
-            <small>Amount Left</small>
+            {% if total_income|default(0) > 0 and savings_saved|default(0) >= 0 %}
+                <h4 class="mb-1 text-white" id="savingsRate">{{ ((savings_saved|default(0) / total_income|default(1) * 100)|round(1)) }}%</h4>
+                <small>Percentage Saved</small>
+            {% elif total_income|default(0) > 0 and savings_saved|default(0) < 0 %}
+                <h4 class="mb-1 text-white" id="savingsRate">Overspent</h4>
+                <small>Negative savings this month</small>
+            {% else %}
+                <h4 class="mb-1 text-white" id="savingsRate">0%</h4>
+                <small>Percentage Saved</small>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Second Row: Time Period Filter -->
+
+<!-- Second Row: Budget Cards -->
+<div class="row g-3 mb-3 justify-content-center">
+    <!-- Needs Card -->
+    <div class="col-12 col-md-4">
+        <div class="card p-2" style="background-color: #28a745; color: white;">
+            <div class="card-title fs-6 text-center">Needs Budget (50%)</div>
+            <h5 class="mb-1 text-center" id="needsAmount">Rs {{ needs_spent|default(0)|round(2) }}</h5>
+            <small class="text-center d-block">Amount Spent</small>
+            <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+            <div class="row">
+                <div class="col-6 text-center">
+                    <small>Budget: Rs {{ needs_budget|default(0)|round(2) }}</small>
+                </div>
+                <div class="col-6 text-center">
+                    {% set needs_rem = (needs_budget|default(0) - needs_spent|default(0)) %}
+                    {% if needs_rem >= 0 %}
+                        <small id="needsRemaining">Remaining: Rs {{ needs_rem|round(2) }}</small>
+                    {% else %}
+                        <small id="needsRemaining" class="text-warning fw-bold">Overspent: Rs {{ (needs_rem * -1)|round(2) }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wants Card -->
+    <div class="col-12 col-md-4">
+        <div class="card p-2" style="background-color: #6610f2; color: white;">
+            <div class="card-title fs-6 text-center">Wants Budget (30%)</div>
+            <h5 class="mb-1 text-center" id="wantsAmount">Rs {{ wants_spent|default(0)|round(2) }}</h5>
+            <small class="text-center d-block">Amount Spent</small>
+            <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+            <div class="row">
+                <div class="col-6 text-center">
+                    <small>Budget: Rs {{ wants_budget|default(0)|round(2) }}</small>
+                </div>
+                <div class="col-6 text-center">
+                    {% set wants_rem = (wants_budget|default(0) - wants_spent|default(0)) %}
+                    {% if wants_rem >= 0 %}
+                        <small id="wantsRemaining">Remaining: Rs {{ wants_rem|round(2) }}</small>
+                    {% else %}
+                        <small id="wantsRemaining" class="text-warning fw-bold">Overspent: Rs {{ (wants_rem * -1)|round(2) }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Savings Card -->
+    <div class="col-12 col-md-4">
+        <div class="card p-2" style="background-color: #fd7e14; color: white;">
+            <div class="card-title fs-6 text-center">Savings Goal (20%)</div>
+            <h5 class="mb-1 text-center" id="savingsAmount">Rs {{ savings_saved|default(0)|round(2) }}</h5>
+            <small class="text-center d-block">Amount Saved</small>
+            <hr class="my-2" style="border-color: rgba(255,255,255,0.3);">
+            <div class="row">
+                <div class="col-6 text-center">
+                    <small>Target: Rs {{ savings_budget|default(0)|round(2) }}</small>
+                </div>
+                <div class="col-6 text-center">
+                    {% set savings_rem = (savings_budget|default(0) - savings_saved|default(0)) %}
+                    {% if savings_rem >= 0 %}
+                        <small id="savingsRemaining">To Goal: Rs {{ savings_rem|round(2) }}</small>
+                    {% else %}
+                        <small id="savingsRemaining" class="text-success fw-bold">Goal Exceeded by Rs {{ (savings_rem * -1)|round(2) }}</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Third Row: Time Period Filter -->
+
+<div class="row mb-3 justify-content-center">
+    <div class="col-12 col-md-4 col-lg-3">
+            {% set net_balance = (total_income|default(0) - total_exp|default(0)) %}
+            <div class="card p-2 text-center {% if net_balance < 0 %}bg-danger text-white border border-3 border-danger{% else %}bg-info text-white{% endif %}" style="{% if net_balance < 0 %}box-shadow: 0 0 10px 2px #dc3545;{% endif %}">
+                <div class="card-title fs-6">Net Balance</div>
+                {% if net_balance >= 0 %}
+                    <h4 class="mb-1 text-white" id="netBalance">Rs {{ net_balance|round(2) }}</h4>
+                    <small>Current Balance</small>
+                {% else %}
+                    <h4 class="mb-1 text-white" id="netBalance">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Overspent: Rs {{ (net_balance * -1)|round(2) }}
+                    </h4>
+                    <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size: 0.95em;">
+                        <strong>Warning:</strong> You have exceeded your income this period!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+</div>
+
 <div class="row mb-3 justify-content-center">
     <div class="col-12">
         <div class="card p-2">
             <div class="card-title text-center fs-6">Filter by Time Period</div>
-            <div class="d-flex justify-content-center gap-2">
-                <button class="btn btn-outline-primary btn-sm active" onclick="filterByPeriod('all', this)">All Time</button>
+            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <button class="btn btn-outline-primary btn-sm active" onclick="filterByPeriod('current_month', this)">Current Month</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('all', this)">All Time</button>
                 <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('7days', this)">Last 7 Days</button>
                 <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('30days', this)">Last 30 Days</button>
                 <button class="btn btn-outline-primary btn-sm" onclick="filterByPeriod('90days', this)">Last 3 Months</button>
@@ -120,7 +151,8 @@
     </div>
 </div>
 
-<!-- Third Row: Tabs -->
+
+<!-- Fourth Row: Charts Tabs -->
 <div class="row mb-3 justify-content-center">
     <div class="col-12">
         <div class="card p-2">
@@ -205,12 +237,20 @@
         </div>
     </div>
 </div>
+
+<!-- Back to Dashboard Button -->
+<div class="row mb-3">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Data from Flask
     const sampleData = {
         totalIncome: {{ total_income|default(0) }},
         totalExpenses: {{ total_exp|default(0) }},
@@ -222,49 +262,21 @@
     };
 
     let charts = {};
-    let filteredData = [...sampleData.transactions]; // Initialize with all transactions
+    let filteredData = [...sampleData.transactions];
 
-    // Initialize the page
+    // Initial metrics
+    let currentMetrics = {
+        totalIncome: sampleData.totalIncome,
+        totalExpenses: sampleData.totalExpenses,
+        needsSpent: {{ needs_spent|default(0) }},
+        wantsSpent: {{ wants_spent|default(0) }},
+        savingsSaved: {{ savings_saved|default(0) }}
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
-        updateMetrics();
         initializeCharts();
-        updateTransactionsList();
+        updateMetricsDisplay();
     });
-
-    function updateMetrics() {
-        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) || 0;
-        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0) || 0;
-        const balance = income - expenses;
-        const savingsRate = income > 0 ? ((balance / income) * 100).toFixed(1) : 0;
-
-        // Calculate used and remaining for Needs (50%), Wants (30%), Savings (20%)
-        const needsBudget = income * 0.50;
-        const wantsBudget = income * 0.30;
-        const savingsBudget = income * 0.20;
-
-        const needsUsed = filteredData.filter(t => t.type === 'expense' && t.category === 'Needs').reduce((sum, t) => sum + t.amount, 0) || 0;
-        const wantsUsed = filteredData.filter(t => t.type === 'expense' && t.category === 'Wants').reduce((sum, t) => sum + t.amount, 0) || 0;
-        const savingsUsed = filteredData.filter(t => t.type === 'expense' && t.category === 'Savings').reduce((sum, t) => sum + t.amount, 0) || 0;
-
-        const needsRemaining = Math.max(0, needsBudget - needsUsed);
-        const wantsRemaining = Math.max(0, wantsBudget - wantsUsed);
-        const savingsRemaining = Math.max(0, savingsBudget - savingsUsed);
-
-        // Update card contents
-        document.getElementById('totalIncome').textContent = `Rs ${income.toLocaleString()}`;
-        document.getElementById('totalExpenses').textContent = `Rs ${expenses.toLocaleString()}`;
-        document.getElementById('netBalance').textContent = `Rs ${balance.toLocaleString()}`;
-        document.getElementById('savingsRate').textContent = `${savingsRate}%`;
-        document.getElementById('needsPercentage').textContent = `50%`;
-        document.getElementById('needsUsed').textContent = `Rs ${needsUsed.toLocaleString()}`;
-        document.getElementById('needsRemaining').textContent = `Rs ${needsRemaining.toLocaleString()}`;
-        document.getElementById('wantsPercentage').textContent = `30%`;
-        document.getElementById('wantsUsed').textContent = `Rs ${wantsUsed.toLocaleString()}`;
-        document.getElementById('wantsRemaining').textContent = `Rs ${wantsRemaining.toLocaleString()}`;
-        document.getElementById('savingsPercentage').textContent = `20%`;
-        document.getElementById('savingsUsed').textContent = `Rs ${savingsUsed.toLocaleString()}`;
-        document.getElementById('savingsRemaining').textContent = `Rs ${savingsRemaining.toLocaleString()}`;
-    }
 
     function initializeCharts() {
         createIncomeExpenseChart();
@@ -275,10 +287,98 @@
         createCategoriesChart();
     }
 
+    function reinitializeCharts() {
+        if (charts.incomeExpense) charts.incomeExpense.destroy();
+        if (charts.budget) charts.budget.destroy();
+        if (charts.trends) charts.trends.destroy();
+        if (charts.monthly) charts.monthly.destroy();
+        if (charts.spendingPattern) charts.spendingPattern.destroy();
+        if (charts.categories) charts.categories.destroy();
+        initializeCharts();
+    }
+
+    function filterByPeriod(period, button) {
+        const buttons = document.querySelectorAll('.btn-outline-primary');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        const today = new Date();
+        filteredData = sampleData.transactions.filter(transaction => {
+            const transactionDate = new Date(transaction.date);
+            switch (period) {
+                case '7days': return (today - transactionDate) <= 7 * 24 * 60 * 60 * 1000;
+                case '30days': return (today - transactionDate) <= 30 * 24 * 60 * 60 * 1000;
+                case '90days': return (today - transactionDate) <= 90 * 24 * 60 * 60 * 1000;
+                case 'year': return transactionDate.getFullYear() === today.getFullYear();
+                case 'current_month':
+                    return transactionDate.getMonth() === today.getMonth() && transactionDate.getFullYear() === today.getFullYear();
+                default: return true; // 'all' case
+            }
+        });
+
+        // Recalculating metrics based on filtered data
+        updateMetrics();
+        updateMetricsDisplay();
+        reinitializeCharts();
+    }
+
+    function updateMetrics() {
+        currentMetrics.totalIncome = Math.max(filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.totalExpenses = Math.max(filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.needsSpent = Math.max(filteredData.filter(t => t.type === 'expense' && t.category === 'needs').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.wantsSpent = Math.max(filteredData.filter(t => t.type === 'expense' && t.category === 'wants').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.savingsSaved = Math.max(filteredData.filter(t => t.type === 'income' && t.category === 'savings').reduce((sum, t) => sum + t.amount, 0), 0);
+    }
+
+    function updateMetricsDisplay() {
+        document.getElementById('totalIncome').textContent = `Rs ${currentMetrics.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('totalExpenses').textContent = `Rs ${currentMetrics.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('needsAmount').textContent = `Rs ${currentMetrics.needsSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('wantsAmount').textContent = `Rs ${currentMetrics.wantsSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('savingsAmount').textContent = `Rs ${currentMetrics.savingsSaved.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // Updating Savings Rate
+        const savingsRate = currentMetrics.totalIncome > 0 ? (currentMetrics.savingsSaved / currentMetrics.totalIncome * 100).toFixed(1) : 0;
+        const savingsRateElement = document.getElementById('savingsRate');
+        if (currentMetrics.totalIncome > 0 && currentMetrics.savingsSaved < 0) {
+            savingsRateElement.textContent = 'Overspent';
+            savingsRateElement.nextElementSibling.textContent = 'Negative savings this month';
+        } else {
+            savingsRateElement.textContent = `${savingsRate}%`;
+            savingsRateElement.nextElementSibling.textContent = 'Percentage Saved';
+        }
+
+        // Updating Remaining Amounts
+        const needsBudget = currentMetrics.totalIncome * 0.5;
+        const wantsBudget = currentMetrics.totalIncome * 0.3;
+        const savingsBudget = currentMetrics.totalIncome * 0.2;
+        const needsRem = needsBudget - currentMetrics.needsSpent;
+        const wantsRem = wantsBudget - currentMetrics.wantsSpent;
+        const savingsRem = savingsBudget - currentMetrics.savingsSaved;
+
+        document.getElementById('needsRemaining').textContent = needsRem >= 0 ? `Remaining: Rs ${needsRem.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `Overspent: Rs ${(-needsRem).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('wantsRemaining').textContent = wantsRem >= 0 ? `Remaining: Rs ${wantsRem.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `Overspent: Rs ${(-wantsRem).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('savingsRemaining').textContent = savingsRem >= 0 ? `To Goal: Rs ${savingsRem.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `Goal Exceeded by Rs ${(-savingsRem).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // Updating Net Balance
+        const netBalance = currentMetrics.totalIncome - currentMetrics.totalExpenses;
+        const netBalanceElement = document.getElementById('netBalance');
+        const netBalanceCard = netBalanceElement.closest('.card');
+        if (netBalance >= 0) {
+            netBalanceElement.textContent = `Rs ${netBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            netBalanceCard.className = 'card p-2 text-center bg-info text-white';
+            netBalanceCard.querySelector('.alert').style.display = 'none';
+        } else {
+            netBalanceElement.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> Overspent: Rs ${(-netBalance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            netBalanceCard.className = 'card p-2 text-center bg-danger text-white border border-3 border-danger';
+            netBalanceCard.querySelector('.alert').style.display = 'block';
+        }
+    }
+
     function createIncomeExpenseChart() {
         const ctx = document.getElementById('incomeExpenseChart').getContext('2d');
-        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) || 0;
-        const expenses = filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0) || 0;
+        const income = Math.max(filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0), 0);
+        const expenses = Math.max(filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0), 0);
 
         if (charts.incomeExpense) charts.incomeExpense.destroy();
         charts.incomeExpense = new Chart(ctx, {
@@ -296,10 +396,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { font: { size: 12 } }
-                    },
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } },
                     tooltip: {
                         callbacks: {
                             label: function(tooltipItem) {
@@ -315,7 +412,7 @@
 
     function createBudgetChart() {
         const ctx = document.getElementById('budgetChart').getContext('2d');
-        const income = filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0) || 0;
+        const income = Math.max(filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0), 0);
 
         if (charts.budget) charts.budget.destroy();
         charts.budget = new Chart(ctx, {
@@ -332,10 +429,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { font: { size: 12 } }
-                    },
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } },
                     tooltip: {
                         callbacks: {
                             label: function(tooltipItem) {
@@ -396,17 +490,10 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Amount (Rs)' }
-                    },
-                    x: {
-                        title: { display: true, text: 'Date' }
-                    }
+                    y: { beginAtZero: true, title: { display: true, text: 'Amount (Rs)' } },
+                    x: { title: { display: true, text: 'Date' } }
                 },
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
-                }
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
             }
         });
     }
@@ -436,33 +523,18 @@
             data: {
                 labels: months,
                 datasets: [
-                    {
-                        label: 'Income',
-                        data: incomeData,
-                        backgroundColor: '#28a745'
-                    },
-                    {
-                        label: 'Expenses',
-                        data: expenseData,
-                        backgroundColor: '#dc3545'
-                    }
+                    { label: 'Income', data: incomeData, backgroundColor: '#28a745' },
+                    { label: 'Expenses', data: expenseData, backgroundColor: '#dc3545' }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Amount (Rs)' }
-                    },
-                    x: {
-                        title: { display: true, text: 'Month' }
-                    }
+                    y: { beginAtZero: true, title: { display: true, text: 'Amount (Rs)' } },
+                    x: { title: { display: true, text: 'Month' } }
                 },
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
-                }
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
             }
         });
     }
@@ -471,13 +543,11 @@
         const ctx = document.getElementById('spendingPatternChart').getContext('2d');
         const categories = ['Needs', 'Wants', 'Savings', 'Emergency', 'Investment'];
         const currentData = categories.map(() => 0);
-        const targetData = [50, 30, 20, 0, 0]; // Default target percentages
+        const targetData = [50, 30, 20, 0, 0];
 
         filteredData.filter(t => t.type === 'expense').forEach(transaction => {
             const catIndex = categories.indexOf(transaction.category);
-            if (catIndex !== -1) {
-                currentData[catIndex] += transaction.amount;
-            }
+            if (catIndex !== -1) currentData[catIndex] += transaction.amount;
         });
 
         const totalExpenses = currentData.reduce((sum, val) => sum + val, 0);
@@ -488,31 +558,16 @@
             type: 'radar',
             data: {
                 labels: categories,
-                datasets: [{
-                    label: 'Current',
-                    data: normalizedCurrent,
-                    borderColor: '#a084e8',
-                    backgroundColor: 'rgba(160, 132, 232, 0.2)'
-                }, {
-                    label: 'Target',
-                    data: targetData,
-                    borderColor: '#17a2b8',
-                    backgroundColor: 'rgba(23, 162, 184, 0.2)'
-                }]
+                datasets: [
+                    { label: 'Current', data: normalizedCurrent, borderColor: '#a084e8', backgroundColor: 'rgba(160, 132, 232, 0.2)' },
+                    { label: 'Target', data: targetData, borderColor: '#17a2b8', backgroundColor: 'rgba(23, 162, 184, 0.2)' }
+                ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: { display: true, text: 'Percentage' }
-                    }
-                },
-                plugins: {
-                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
-                }
+                scales: { r: { beginAtZero: true, max: 100, title: { display: true, text: 'Percentage' } } },
+                plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } }
             }
         });
     }
@@ -533,31 +588,17 @@
             type: 'bar',
             data: {
                 labels: categories,
-                datasets: [{
-                    label: 'Amount Spent',
-                    data: amounts,
-                    backgroundColor: colors.slice(0, categories.length),
-                    borderRadius: 4
-                }]
+                datasets: [{ label: 'Amount Spent', data: amounts, backgroundColor: colors.slice(0, categories.length), borderRadius: 4 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 indexAxis: 'y',
-                scales: {
-                    y: { title: { display: true, text: 'Category' } },
-                    x: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Amount (Rs)' }
-                    }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
+                scales: { y: { title: { display: true, text: 'Category' } }, x: { beginAtZero: true, title: { display: true, text: 'Amount (Rs)' } } },
+                plugins: { legend: { display: false } }
             }
         });
 
-        // Update category list
         const categoryList = document.getElementById('categoryList');
         categoryList.innerHTML = '';
         categories.forEach((category, index) => {
@@ -566,42 +607,6 @@
             li.innerHTML = `${category}: Rs ${amounts[index].toLocaleString()}`;
             categoryList.appendChild(li);
         });
-    }
-
-    function filterByPeriod(period, button) {
-        const buttons = document.querySelectorAll('.btn-outline-primary');
-        buttons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-
-        const today = new Date();
-        filteredData = sampleData.transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
-            switch (period) {
-                case '7days': return (today - transactionDate) <= 7 * 24 * 60 * 60 * 1000;
-                case '30days': return (today - transactionDate) <= 30 * 24 * 60 * 60 * 1000;
-                case '90days': return (today - transactionDate) <= 90 * 24 * 60 * 60 * 1000;
-                case 'year': return transactionDate.getFullYear() === today.getFullYear();
-                default: return true;
-            }
-        });
-        updateMetrics();
-        reinitializeCharts();
-        updateTransactionsList();
-    }
-
-    function reinitializeCharts() {
-        createIncomeExpenseChart();
-        createBudgetChart();
-        createTrendsChart();
-        createMonthlyChart();
-        createSpendingPatternChart();
-        createCategoriesChart();
-    }
-
-    // Function to update transactions list (placeholder)
-    function updateTransactionsList() {
-        // This can be expanded to display transactions if needed
-        console.log('Transactions filtered:', filteredData);
     }
 </script>
 {% endblock %}

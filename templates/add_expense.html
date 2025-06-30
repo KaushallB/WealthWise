@@ -67,19 +67,16 @@ body {
     transform: scale(1.05);
 }
 .expense-card {
-   
     border-radius: 10px;
     padding: 15px;
     margin-top: 20px;
 }
 .help-section {
-    
     border: 1px solid #e74c3c;
     border-radius: 10px;
     padding: 15px;
     margin-bottom: 20px;
     font-size: 0.9rem;
-
 }
 @keyframes fadeIn {
     from { opacity: 0; }
@@ -88,22 +85,117 @@ body {
 .fade-in {
     animation: fadeIn 1s ease-in;
 }
+.btn-savings {
+    background-color: #28a745 ;
+    border-color: #28a745;
+}
+.btn-needs {
+    background-color:rgb(231, 17, 17) ;
+    border-color: rgb(231, 17, 17);
+}
+.btn-wants {
+    background-color:rgb(231, 17, 17) ;
+    border-color: rgb(231, 17, 17);
+}
+.btn-other {
+    background-color: #fd7e14 ;
+    border-color: #fd7e14 ;
+}
+.btn-default {
+    background-color: #e74c3c ;
+    border-color: #e74c3c ;
+}
 </style>
+
 <div class="container mt-5 d-flex justify-content-center">
     <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
         <h2 class="text-center mb-4 fade-in" style=" font-size: 2.5rem;">
             <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Expense
         </h2>
+        
         <!-- Help Section -->
         <div class="help-section">
             <h6>Understanding Needs vs. Wants</h6>
-            <p><strong>Needs</strong> are essential expenses for survival (e.g., rent, groceries, utilities). <strong>Wants</strong> are non-essential expenses for enjoyment (e.g., dining out, entertainment). We follow the 50/30/20 rule: 50% of your income for needs, 30% for wants, and 20% for savings.</p>
+            <p><strong>Needs</strong> are essential expenses for survival (e.g., rent, groceries, utilities). <br> <strong>Wants</strong> are non-essential expenses for enjoyment (e.g., dining out, entertainment). We follow the 50/30/20 rule: 50% of your income for needs, 30% for wants, and 20% for savings.</p>
             <p><strong>Examples:</strong></p>
             <ul>
                 <li><strong>Needs:</strong> Rent, groceries, transportation, utilities</li>
                 <li><strong>Wants:</strong> Dining out, movies, subscriptions, shopping</li>
             </ul>
         </div>
+
+       <!-- Monthly Budget Status Section -->
+<div class="help-section" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%); border-color: #28a745;">
+    <h3 class="text-center">Current Month Budget Status</h3>
+    <div class="row">
+        <div class="col-md-6">
+            <p><strong>Needs Budget:</strong> Rs {{ needs_spent|default(0)|float|round(2) }} / Rs {{ needs_limit|default(0)|float|round(2) }}</p>
+            <div class="progress mb-2" style="height: 8px; background-color:white;">
+                {% set needs_limit_float = needs_limit|default(0)|float %}
+                {% set needs_spent_float = needs_spent|default(0)|float %}
+                {% set needs_percentage = (needs_spent_float / needs_limit_float * 100) if needs_limit_float > 0 else 0 %}
+                <div class="progress-bar {% if needs_percentage > 100 %}bg-danger{% elif needs_percentage > 90 %}bg-warning{% else %}bg-success{% endif %}" 
+                     style="width: {{ needs_percentage|round(1) }}%; background-color: white !important;"></div>
+            </div>
+            <small>
+                {% if needs_limit_float > 0 %}
+                    {% if needs_spent_float > needs_limit_float %}
+                        <span class="text-danger">Over budget by Rs {{ (needs_spent_float - needs_limit_float)|round(2) }}</span>
+                    {% else %}
+                        <span class="text-success">Remaining: Rs {{ (needs_limit_float - needs_spent_float)|round(2) }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">Add monthly income to set budget</span>
+                {% endif %}
+            </small>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Wants Budget:</strong> Rs {{ wants_spent|default(0)|float|round(2) }} / Rs {{ wants_limit|default(0)|float|round(2) }}</p>
+            <div class="progress mb-2" style="height: 8px; background-color:white;">
+                {% set wants_limit_float = wants_limit|default(0)|float %}
+                {% set wants_spent_float = wants_spent|default(0)|float %}
+                {% set wants_percentage = (wants_spent_float / wants_limit_float * 100) if wants_limit_float > 0 else 0 %}
+                <div class="progress-bar {% if wants_percentage > 100 %}bg-danger{% elif wants_percentage > 90 %}bg-warning{% else %}bg-info{% endif %}" 
+                     style="width: {{ wants_percentage|round(1) }}%; background-color: white !important;"></div>
+            </div>
+            <small>
+                {% if wants_limit_float > 0 %}
+                    {% if wants_spent_float > wants_limit_float %}
+                        <span class="text-danger">Over budget by Rs {{ (wants_spent_float - wants_limit_float)|round(2) }}</span>
+                    {% else %}
+                        <span class="text-success">Remaining: Rs {{ (wants_limit_float - wants_spent_float)|round(2) }}</span>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">Add monthly income to set budget</span>
+                {% endif %}
+            </small>
+        </div>
+    </div>
+    <small class="text-muted text-center w-100 d-block mt-2">
+        Budget status updates in real-time as you add expenses.
+    </small>
+</div>
+
+        <!-- Budget Warning Alert - Fixing DIVISION BY ZERO -->
+        {% set needs_limit_float = needs_limit|default(0)|float %}
+        {% set wants_limit_float = wants_limit|default(0)|float %}
+        {% set needs_spent_float = needs_spent|default(0)|float %}
+        {% set wants_spent_float = wants_spent|default(0)|float %}
+        
+        {% set needs_percentage = (needs_spent_float / needs_limit_float * 100) if needs_limit_float > 0 else 0 %}
+        {% set wants_percentage = (wants_spent_float / wants_limit_float * 100) if wants_limit_float > 0 else 0 %}
+        
+        {% if needs_percentage > 80 or wants_percentage > 80 %}
+        <div class="alert alert-warning" role="alert">
+            <strong>Budget Alert!</strong>
+            {% if needs_percentage > 80 %}
+                You've used {{ needs_percentage|round(1) }}% of your Needs budget.
+            {% endif %}
+            {% if wants_percentage > 80 %}
+                You've used {{ wants_percentage|round(1) }}% of your Wants budget.
+            {% endif %}
+        </div>
+        {% endif %}
 
         <form id="expense-form" method="POST" action="{{ url_for('add_expense', user_id=user.id) }}">
             <div class="mb-3">
@@ -123,6 +215,7 @@ body {
                     <option value="">Select a category</option>
                     <option value="needs" {% if expense and expense.category == 'needs' %}selected{% endif %}>Needs</option>
                     <option value="wants" {% if expense and expense.category == 'wants' %}selected{% endif %}>Wants</option>
+                    <option value="savings" {% if expense and expense.category == 'savings' %}selected{% endif %}>Savings</option>
                     <option value="other" {% if expense and expense.category == 'other' %}selected{% endif %}>Other</option>
                 </select>
             </div>
@@ -137,7 +230,7 @@ body {
             <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
         <div class="expense-card">
-            <h5 class="text-center">Recent Expenses</h5>
+            <h5 class="text-center">Recent Expenses (This Month)</h5>
             {% if recent_expenses %}
                 {% for recent_expense in recent_expenses %}
                 <div class="card mb-2 p-2">
@@ -153,7 +246,7 @@ body {
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="text-center">No recent expenses found.</p>
+                <p class="text-center">No recent expenses found for this month.</p>
             {% endif %}
         </div>
     </div>
@@ -180,5 +273,39 @@ body {
     {% if not expense %}
         document.getElementById('date').value = new Date().toISOString().split('T')[0];
     {% endif %}
+
+    // Function to update button style and text based on category
+    function updateButton() {
+        const categorySelect = document.getElementById('category'); // Select the category dropdown
+        const actionBtn = document.getElementById('action-btn'); // Select the action button
+        const selectedCategory = categorySelect.value.toLowerCase();
+
+        // Removing all category-specific classes
+        actionBtn.classList.remove('btn-savings', 'btn-needs', 'btn-wants', 'btn-other', 'btn-default');
+
+        // Updating button class and text based on selected category
+        if (selectedCategory === 'savings') {
+            actionBtn.classList.add('btn-savings');
+            actionBtn.textContent = 'Add Savings';
+        } else if (selectedCategory === 'needs') {
+            actionBtn.classList.add('btn-needs');
+            actionBtn.textContent = 'Add Needs';
+        } else if (selectedCategory === 'wants') {
+            actionBtn.classList.add('btn-wants');
+            actionBtn.textContent = 'Add Wants';
+        } else if (selectedCategory === 'other') {
+            actionBtn.classList.add('btn-other');
+            actionBtn.textContent = 'Add Others';
+        } else {
+            actionBtn.classList.add('btn-default');
+            actionBtn.textContent = 'Add Expense';
+        }
+    }
+
+    // Adding event listener to category select to trigger updateButton on change
+    document.getElementById('category').addEventListener('change', updateButton);
+
+    // Triggering updateButton on page load to set initial button state
+    document.addEventListener('DOMContentLoaded', updateButton);
 </script>
 {% endblock %}
