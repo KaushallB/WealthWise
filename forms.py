@@ -9,9 +9,18 @@ def name_val(form,field):
     if not re.match("^[a-zA-z\s]+$",field.data):
         raise ValidationError('Name cannot should have only letters and spaces')
     
-def number_val(form,field):
-    if not re.match("^\+?\d{10,15}",field.data):
-        raise ValidationError("Phone Number cannot contain only numbers")
+def number_val(form, field):
+    # Removing all non-digit characters except +
+    cleaned = re.sub(r'[^\d\+]', '', field.data)
+    
+    if not re.match(r'^(\+977|\+\d{1,3})?\d{10,15}$', cleaned):
+        raise ValidationError("Enter a valid phone number (10-15 digits, country code optional)")
+    
+    # Check minimum length without country code
+    digits_only = re.sub(r'^\+\d{1,3}', '', cleaned)
+    if len(digits_only) < 10:
+        raise ValidationError("Phone number must be at least 10 digits")
+
 
 def pw_val(form, field):
     print("Password entered:", field.data)  # Debugging line

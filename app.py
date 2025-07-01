@@ -721,7 +721,7 @@ def delete_income(user_id, income_id):
         return redirect(url_for('add_income', user_id=user_id))
 
 #ADDEXPENSE
-@app.route('/add_expense/<int:user_id>', methods=['GET','POST'])
+@app.route('/add_expense/<int:user_id>', methods=['GET', 'POST'])
 def add_expense(user_id):
     if not is_logged_in():
         flash('Please log in to access this page.', 'danger')
@@ -749,9 +749,8 @@ def add_expense(user_id):
                 current_time = datetime.now().time()
                 full_datetime = datetime.combine(date_obj.date(), current_time)
                 
-                # ALWAYS ADD THE EXPENSE FIRST - NO BLOCKING
                 if expense_id:
-                    # Updating existing expense
+                    # Updating existing expense or savings
                     cursor.execute(
                         "UPDATE transactions SET amount=%s, category=%s, date=%s, description=%s WHERE id=%s AND user_id=%s",
                         (Decimal(amount), category, full_datetime, description, expense_id, user_id)
@@ -761,7 +760,7 @@ def add_expense(user_id):
                     else:
                         flash('Expense updated successfully!', 'success')
                 else:
-                    # Adding new expense
+                    # Adding new expense or savings
                     cursor.execute(
                         "INSERT INTO transactions (user_id, transaction_type, category, amount, date, description) VALUES (%s, 'expense', %s, %s, %s, %s)",
                         (user_id, category, Decimal(amount), full_datetime, description)
@@ -773,12 +772,12 @@ def add_expense(user_id):
                 
                 mysql.connection.commit()
                 
-                # NOW CHECK FOR BUDGET OVERRUNS AND SEND EMAIL WARNINGS
-                if category.lower() in ['needs', 'wants', 'savings']:
+                # Only check budget warnings for 'needs' and 'wants', not 'savings'
+                if category.lower() in ['needs', 'wants']:
                     current_month = datetime.now().month
                     current_year = datetime.now().year
                     
-                    # Get user info for email
+                    # Getting user info for email
                     cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
                     user = cursor.fetchone()
                     
@@ -797,16 +796,13 @@ def add_expense(user_id):
                     allocation = cursor.fetchone()
                     
                     if allocation and monthly_income > 0:
-                        # Calculate limits for all categories including savings
+                        # Calculating limits for needs and wants only
                         if category.lower() == 'needs':
                             limit = (monthly_income * allocation['needs_percent']) / 100
                             category_name = "Needs"
                         elif category.lower() == 'wants':
                             limit = (monthly_income * allocation['wants_percent']) / 100
                             category_name = "Wants"
-                        elif category.lower() == 'savings':
-                            limit = (monthly_income * allocation['savings_percent']) / 100
-                            category_name = "Savings"
                         
                         # Check current spending AFTER adding this expense
                         cursor.execute('''
@@ -820,15 +816,14 @@ def add_expense(user_id):
                         current_spent = spent_result['spent'] or 0
                         percentage_used = (current_spent / limit) * 100 if limit > 0 else 0
                         
-                        # Send email warnings based on budget status
+                        # Sending email warnings based on budget status
                         if current_spent > limit:
                             # Over budget - send warning email
                             overage = current_spent - limit
                             flash(f'Budget Alert: You have exceeded your {category_name} budget by Rs {overage:.2f} this month. Warning Email has been sent', 'warning')
-                            
                             try:
                                 msg = Message("Budget Warning - WealthWise", recipients=[user['email']])
-                                msg.html = render_template("warning_email.html", 
+                                msg.html = render_template("warning.html", 
                                                          full_name=user['full_name'],
                                                          category=category_name,
                                                          status="exceeded",
@@ -839,14 +834,12 @@ def add_expense(user_id):
                                 mail.send(msg)
                             except Exception as email_error:
                                 print(f'Error sending budget warning email: {str(email_error)}')
-                                
-                        elif percentage_used >= 90:  # 90% threshold
+                        elif percentage_used >= 80:  # 80% threshold
                             remaining = limit - current_spent
                             flash(f'Budget Notice: You have Rs {remaining:.2f} remaining in your {category_name} budget this month. Warning Email has been sent', 'info')
-                            
                             try:
                                 msg = Message("Budget Alert - WealthWise", recipients=[user['email']])
-                                msg.html = render_template("warning_email.html", 
+                                msg.html = render_template("warning.html", 
                                                          full_name=user['full_name'],
                                                          category=category_name,
                                                          status="is approaching",
@@ -857,9 +850,41 @@ def add_expense(user_id):
                                 mail.send(msg)
                             except Exception as email_error:
                                 print(f'Error sending budget alert email: {str(email_error)}')
-                                
-                        elif percentage_used >= 80:  # 80% threshold
-                            flash(f'Budget Update: You have used {percentage_used:.1f}% of your {category_name} budget this month.', 'info')
+                
+                # Tracking savings progress (no warnings, just info)
+                elif category.lower() == 'savings':
+                    current_month = datetime.now().month
+                    current_year = datetime.now().year
+                    
+                    cursor.execute('''
+                        SELECT SUM(amount) as monthly_income 
+                        FROM transactions 
+                        WHERE user_id = %s AND transaction_type = 'income' AND category != 'savings'
+                        AND MONTH(date) = %s AND YEAR(date) = %s
+                    ''', (user_id, current_month, current_year))
+                    
+                    income_result = cursor.fetchone()
+                    monthly_income = income_result['monthly_income'] or 0
+                    
+                    cursor.execute("SELECT * FROM budget_allocations WHERE user_id = %s", (user_id,))
+                    allocation = cursor.fetchone()
+                    
+                    if allocation and monthly_income > 0:
+                        savings_target = (monthly_income * allocation['savings_percent']) / 100
+                        cursor.execute('''
+                            SELECT SUM(amount) as saved 
+                            FROM transactions 
+                            WHERE user_id = %s AND transaction_type = 'expense' 
+                            AND category = 'savings' AND MONTH(date) = %s AND YEAR(date) = %s
+                        ''', (user_id, current_month, current_year))
+                        saved_result = cursor.fetchone()
+                        current_saved = saved_result['saved'] or 0
+                        
+                        if current_saved >= savings_target:
+                            flash(f'Great job! You have saved Rs {current_saved:.2f}, meeting your savings target of Rs {savings_target:.2f} this month.', 'success')
+                        else:
+                            remaining = savings_target - current_saved
+                            flash(f'Savings Update: You have saved Rs {current_saved:.2f}. Aim to save Rs {remaining:.2f} more to meet your target of Rs {savings_target:.2f}.', 'info')
                 
                 return redirect(url_for('add_expense', user_id=user_id))
                 
@@ -883,7 +908,7 @@ def add_expense(user_id):
     cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
     
-    # Get monthly budget data (excluding savings from income)
+    # Getting monthly budget data (excluding savings from income)
     cursor.execute('''
         SELECT 
             SUM(CASE WHEN transaction_type = 'income' AND category != 'savings' THEN amount ELSE 0 END) as monthly_income,
@@ -896,7 +921,7 @@ def add_expense(user_id):
     monthly_data = cursor.fetchone()
     monthly_income = monthly_data['monthly_income'] or 0
 
-    # Get budget allocation
+    # Getting budget allocation
     cursor.execute("SELECT * FROM budget_allocations WHERE user_id = %s", (user_id,))
     allocation = cursor.fetchone()
 

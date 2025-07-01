@@ -82,28 +82,6 @@ body {
             <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income
         </h2>
 
-        <!-- Monthly Income Summary Section -->
-        <div class="help-section" style="background: linear-gradient(135deg, #e8f8e8 0%, #d4edda 100%); border-color: #28a745;">
-            <h3 class="font-weight-bold text-center"> Current Month Income Summary</h3>
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Total Monthly Income:</strong> Rs {{ monthly_income|default(0)|float|round(2) }}</p>
-                    <small class="text-success">This will determine your monthly budget limits</small>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Budget Allocation (50/30/20 Rule):</strong></p>
-                    <ul style="font-size: 0.8rem; margin: 0;">
-                        <li>Needs: Rs {{ (monthly_income|default(0)|float * 0.5)|round(2) }}</li>
-                        <li>Wants: Rs {{ (monthly_income|default(0)|float * 0.3)|round(2) }}</li>
-                        <li>Savings: Rs {{ (monthly_income|default(0)|float * 0.2)|round(2) }}</li>
-                    </ul>
-                </div>
-            </div>
-            <small class="text-muted" style="display: block; text-align: center; width: 100%; margin-top: 0.5rem;">
-                Income resets every month for budget calculation.
-            </small>
-        </div>
-
         <form id="income-form" method="POST" action="{{url_for('add_income',user_id=user.id)}}">
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount (Rs)</label>
@@ -114,6 +92,7 @@ body {
                 <label for="category" class="form-label">Category</label>
                 <select name="category" id="category" class="form-select" required>
                     <option value="">Select a category</option>
+                    <option value="pocket money" {% if income and income.category == 'pocket money' %}selected{% endif %}>Pocket Money</option>
                     <option value="salary" {% if income and income.category == 'salary' %}selected{% endif %}>Salary</option>
                     <option value="business" {% if income and income.category == 'business' %}selected{% endif %}>Business</option>
                     <option value="other" {% if income and income.category == 'other' %}selected{% endif %}>Other</option>
