@@ -5,7 +5,7 @@
 {% block main_content %}
 <style>
 body {
-    background: linear-gradient(135deg, #f7dada 0%, #e2b3b3 100%);
+    background: linear-gradient(135deg, #f7e7e7 0%, #e2d3d3 100%);
     font-family: 'Arial', sans-serif;
 }
 .card {
@@ -32,9 +32,11 @@ body {
     border-radius: 10px;
     padding: 10px 20px;
     font-size: 1.1rem;
+    color: #fff;
     transition: all 0.3s ease;
 }
 .btn-primary:hover {
+    background-color: #c0392b;
     transform: scale(1.05);
 }
 .btn-secondary {
@@ -43,24 +45,24 @@ body {
     border-radius: 10px;
     padding: 10px 20px;
     font-size: 1.1rem;
+    color: #fff;
     transition: all 0.3s ease;
 }
 .btn-secondary:hover {
+    background-color: #a04000;
     transform: scale(1.05);
 }
-
 .mb-3.d-flex.align-items-center .chatbot-btn {
-    margin-top: 1.5rem; /* Push button down to align with input bottom */
+    margin-top: 1.5rem;
     height: 38px;
     align-self: flex-end;
 }
-
 .chatbot-btn {
-    background-color: #3498db; 
+    background-color: #3498db;
     border: none;
     border-radius: 10px;
-    padding: 8px 15px;
-    font-size: 0.9rem;
+    padding: 10px 20px;
+    font-size: 1.1rem;
     color: #fff;
     transition: all 0.3s ease;
     margin-left: 10px;
@@ -70,7 +72,7 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .chatbot-btn:hover {
-    background-color: #2980b9; 
+    background-color: #217dbb;
     transform: scale(1.02);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
@@ -99,22 +101,70 @@ body {
 .btn-savings {
     background-color: #28a745;
     border-color: #28a745;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.btn-savings:hover {
+    background-color: #1e7e34;
+    transform: scale(1.05);
 }
 .btn-needs {
-    background-color: rgb(231, 17, 17);
-    border-color: rgb(231, 17, 17);
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.btn-needs:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
 }
 .btn-wants {
-    background-color: rgb(231, 17, 17);
-    border-color: rgb(231, 17, 17);
+    background-color: #e67e22;
+    border-color: #e67e22;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.btn-wants:hover {
+    background-color: #b36217;
+    transform: scale(1.05);
 }
 .btn-other {
     background-color: #fd7e14;
     border-color: #fd7e14;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.btn-other:hover {
+    background-color: #c65d0e;
+    transform: scale(1.05);
 }
 .btn-default {
     background-color: #e74c3c;
     border-color: #e74c3c;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+}
+.btn-default:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
+}
+.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    color: #fff;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+.btn-danger:hover {
+    background-color: #c0392b;
+    transform: scale(1.05);
 }
 </style>
 
@@ -135,23 +185,39 @@ body {
             </ul>
         </div>
 
-        <!-- Monthly Budget Status Section -->
+       <!-- Monthly Budget Status Section -->
         <div class="help-section" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%); border-color: #28a745;">
             <h3 class="text-center">Current Month Budget Status</h3>
             <div class="row">
                 <div class="col-md-6">
                     <p><strong>Needs Budget:</strong> Rs {{ needs_spent|default(0)|float|round(2) }} / Rs {{ needs_limit|default(0)|float|round(2) }}</p>
-                    <div class="progress mb-2" style="height: 8px; background-color: white;">
+                    <div class="progress mb-2" style="height: 12px;">
                         {% set needs_limit_float = needs_limit|default(0)|float %}
                         {% set needs_spent_float = needs_spent|default(0)|float %}
                         {% set needs_percentage = (needs_spent_float / needs_limit_float * 100) if needs_limit_float > 0 else 0 %}
-                        <div class="progress-bar {% if needs_percentage > 100 %}bg-danger{% elif needs_percentage > 90 %}bg-warning{% else %}bg-success{% endif %}" 
-                             style="width: {{ needs_percentage|round(1) }}%; background-color: white !important;"></div>
+                        
+                        {% if needs_spent_float > needs_limit_float %}
+                            <!-- When exceeded, show full bar in red -->
+                            <div class="progress-bar bg-danger" style="width: 100%;" 
+                                role="progressbar" aria-valuenow="{{ needs_percentage|round(1) }}" 
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ needs_percentage|round(1) }}%
+                            </div>
+                        {% else %}
+                            <!-- Normal progress -->
+                            {% set progress_width = needs_percentage|round(1) %}
+                            <div class="progress-bar {% if needs_percentage > 90 %}bg-warning{% else %}bg-success{% endif %}" 
+                                style="width: {{ progress_width }}%;" 
+                                role="progressbar" aria-valuenow="{{ progress_width }}" 
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ progress_width }}%
+                            </div>
+                        {% endif %}
                     </div>
                     <small>
                         {% if needs_limit_float > 0 %}
                             {% if needs_spent_float > needs_limit_float %}
-                                <span class="text-danger">Over budget by Rs {{ (needs_spent_float - needs_limit_float)|round(2) }}</span>
+                                <span class="text-danger"><strong>Over budget by Rs {{ (needs_spent_float - needs_limit_float)|round(2) }}</strong></span>
                             {% else %}
                                 <span class="text-success">Remaining: Rs {{ (needs_limit_float - needs_spent_float)|round(2) }}</span>
                             {% endif %}
@@ -162,17 +228,33 @@ body {
                 </div>
                 <div class="col-md-6">
                     <p><strong>Wants Budget:</strong> Rs {{ wants_spent|default(0)|float|round(2) }} / Rs {{ wants_limit|default(0)|float|round(2) }}</p>
-                    <div class="progress mb-2" style="height: 8px; background-color: white;">
+                    <div class="progress mb-2" style="height: 12px;">
                         {% set wants_limit_float = wants_limit|default(0)|float %}
                         {% set wants_spent_float = wants_spent|default(0)|float %}
                         {% set wants_percentage = (wants_spent_float / wants_limit_float * 100) if wants_limit_float > 0 else 0 %}
-                        <div class="progress-bar {% if wants_percentage > 100 %}bg-danger{% elif wants_percentage > 90 %}bg-warning{% else %}bg-info{% endif %}" 
-                             style="width: {{ wants_percentage|round(1) }}%; background-color: white !important;"></div>
+                        
+                        {% if wants_spent_float > wants_limit_float %}
+                            <!-- When exceeded, show full bar in red -->
+                            <div class="progress-bar bg-danger" style="width: 100%;" 
+                                role="progressbar" aria-valuenow="{{ wants_percentage|round(1) }}" 
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ wants_percentage|round(1) }}%
+                            </div>
+                        {% else %}
+                            <!-- Normal progress -->
+                            {% set progress_width = wants_percentage|round(1) %}
+                            <div class="progress-bar {% if wants_percentage > 90 %}bg-warning{% else %}bg-info{% endif %}" 
+                                style="width: {{ progress_width }}%;" 
+                                role="progressbar" aria-valuenow="{{ progress_width }}" 
+                                aria-valuemin="0" aria-valuemax="100">
+                                {{ progress_width }}%
+                            </div>
+                        {% endif %}
                     </div>
                     <small>
                         {% if wants_limit_float > 0 %}
                             {% if wants_spent_float > wants_limit_float %}
-                                <span class="text-danger">Over budget by Rs {{ (wants_spent_float - wants_limit_float)|round(2) }}</span>
+                                <span class="text-danger"><strong>Over budget by Rs {{ (wants_spent_float - wants_limit_float)|round(2) }}</strong></span>
                             {% else %}
                                 <span class="text-success">Remaining: Rs {{ (wants_limit_float - wants_spent_float)|round(2) }}</span>
                             {% endif %}
@@ -186,6 +268,7 @@ body {
                 Budget status updates in real-time as you add expenses.
             </small>
         </div>
+
 
         <!-- Budget Warning Alert - Fixing DIVISION BY ZERO -->
         {% set needs_limit_float = needs_limit|default(0)|float %}
@@ -243,23 +326,30 @@ body {
             <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
         <div class="expense-card">
-            <h5 class="text-center">Recent Expenses (This Month)</h5>
+            <h5 class="text-center">Recent Transactions (This Month)</h5>
             {% if recent_expenses %}
                 {% for recent_expense in recent_expenses %}
                 <div class="card mb-2 p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>{{ recent_expense.category|capitalize }}: Rs {{ recent_expense.amount|round(2) }} ({{ recent_expense.date }}) - {{ recent_expense.description if recent_expense.description else '' }}</span>
                         <div>
-                            <a href="{{ url_for('edit_expense', user_id=user.id, id=recent_expense.id) }}" class="btn btn-sm btn-primary me-2">Edit</a>
-                            <form action="{{ url_for('delete_expense', user_id=user.id, id=recent_expense.id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-sm btn-danger me-2">Delete</button>
-                            </form>
+                            {% if recent_expense.category.lower() == 'savings' %}
+                                <a href="{{ url_for('edit_expense', user_id=user.id, id=recent_expense.id) }}" class="btn btn-savings me-2">Edit Savings</a>
+                                <form action="{{ url_for('delete_expense', user_id=user.id, id=recent_expense.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-savings me-2">Delete Savings</button>
+                                </form>
+                            {% else %}
+                                <a href="{{ url_for('edit_expense', user_id=user.id, id=recent_expense.id) }}" class="btn btn-primary me-2">Edit Expense</a>
+                                <form action="{{ url_for('delete_expense', user_id=user.id, id=recent_expense.id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger me-2">Delete Expense</button>
+                                </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="text-center">No recent expenses found for this month.</p>
+                <p class="text-center">No recent transactions found for this month.</p>
             {% endif %}
         </div>
     </div>
