@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.min.css') }}">
-    
-    <title>Register - Wealth Wise</title>
+ 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/logowhite.png') }}">
+    <title>WealthWise - Register </title>
     <style>
         .logo-container {
             text-align: center;
@@ -26,6 +28,16 @@
         .login-link:hover {
             color: #ffc107 !important;
             text-decoration: underline;
+        }
+        .checklist {
+            font-size: 0.9em;
+            color: #333;
+        }
+        .checklist .valid {
+            color: green;
+        }
+        .checklist .invalid {
+            color: white;
         }
     </style>
 </head>
@@ -52,15 +64,15 @@
                                             {% endfor %}
                                         {% endif %}
                                     {% endwith %}
+                                    <div class="logo-container">
+                                        <img class="w-25 img-fluid" src="{{ url_for('static', filename='assets/logowhite.png') }}" alt="logo"/>
+                                    </div>
+                                    <div class="header">
+                                        <h5 class="fw-bold mb-3 pb-3 justify-content-center text-white" style="letter-spacing: 1px;">Create your account</h5>
+                                    </div>
+
                                     <form method="POST" action="{{ url_for('registration') }}">
                                         {{ form.hidden_tag() }}
-                                        <div class="logo-container">
-                                            <img class="w-25 img-fluid" src="{{ url_for('static', filename='assets/logowhite.png') }}" alt="logo"/>
-                                        </div>
-                                        <div class="header">
-                                            <h5 class="fw-bold mb-3 pb-3 justify-content-center text-white" style="letter-spacing: 1px;">Create your account</h5>
-                                        </div>
-
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.full_name.label(class="form-label text-white") }}
                                             <div class="input-group mb-4">
@@ -70,28 +82,32 @@
                                                         <path d="M2 13c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
                                                     </svg>
                                                 </span>
-                                                {{ form.full_name(class="form-control form-control-lg", placeholder="Enter your name") }}
+                                                {{ form.full_name(class="form-control form-control-lg", placeholder="Enter your name", id="full_name") }}
                                                 {% for error in form.full_name.errors %}
                                                     <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
+                                            <div class="checklist" id="name-checklist">
+                                                <div id="name-format-check" class="invalid">Only letters and spaces</div>
+                                            </div>
                                         </div>
-                                        
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.email.label(class="form-label text-white") }}
-                                                <div class="input-group mb-4">
+                                            <div class="input-group mb-4">
                                                 <span class="input-group-text" style="background-color: #D79922; border-color: #D79922;">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-envelope-fill" viewBox="0 0 16 16">
-                                                <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V3a1 1 0 0 0-1-1H2z"/>
-                                                 </svg>
-                                                 </span>
-                                              {{ form.email(class="form-control form-control-lg", placeholder="Enter your email") }}
-                                              {% for error in form.email.errors %}
-                                              <div class="text-danger">{{ error }}</div>
-                                              {% endfor %}
-                                              </div>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" class="bi bi-envelope-fill" viewBox="0 0 16 16">
+                                                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V3a1 1 0 0 0-1-1H2z"/>
+                                                    </svg>
+                                                </span>
+                                                {{ form.email(class="form-control form-control-lg", placeholder="Enter your email", id="email") }}
+                                                {% for error in form.email.errors %}
+                                                    <div class="text-danger">{{ error }}</div>
+                                                {% endfor %}
                                             </div>
-
+                                            <div class="checklist" id="email-checklist">
+                                                <div id="email-format-check" class="invalid">Valid email format (e.g., user@example.com)</div>
+                                            </div>
+                                        </div>
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.phone_num.label(class="form-label text-white") }}
                                             <div class="input-group mb-4">
@@ -101,13 +117,15 @@
                                                         <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
                                                     </svg>
                                                 </span>
-                                                {{ form.phone_num(class="form-control form-control-lg", placeholder="+977 1234567890") }}
+                                                {{ form.phone_num(class="form-control form-control-lg", placeholder="+977 1234567890", id="phone_num") }}
                                                 {% for error in form.phone_num.errors %}
                                                     <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
+                                            <div class="checklist" id="phone-checklist">
+                                                <div id="phone-format-check" class="invalid">10 digits, optionally with +977</div>
+                                            </div>
                                         </div>
-
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.address.label(class="form-label text-white") }}
                                             <div class="input-group mb-4">
@@ -122,7 +140,6 @@
                                                 {% endfor %}
                                             </div>
                                         </div>
-
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.password.label(class="form-label text-white") }}
                                             <div class="input-group mb-4">
@@ -131,13 +148,19 @@
                                                         <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
                                                     </svg>
                                                 </span>
-                                                {{ form.password(class="form-control form-control-lg", placeholder="Your Password Here") }}
+                                                {{ form.password(class="form-control form-control-lg", placeholder="Your Password Here", id="password") }}
                                                 {% for error in form.password.errors %}
                                                     <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
+                                            <div class="checklist" id="password-checklist">
+                                                <div id="length-check" class="invalid">At least 8 characters</div>
+                                                <div id="uppercase-check" class="invalid">One uppercase letter</div>
+                                                <div id="lowercase-check" class="invalid">One lowercase letter</div>
+                                                <div id="number-check" class="invalid">One number</div>
+                                                <div id="special-check" class="invalid">One special character (e.g., @$!%*?&)</div>
+                                            </div>
                                         </div>
-
                                         <div data-mdb-input-init class="form-outline mb-4">
                                             {{ form.confirm_pw.label(class="form-label text-white") }}
                                             <div class="input-group mb-4">
@@ -146,18 +169,18 @@
                                                         <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
                                                     </svg>
                                                 </span>
-                                                {{ form.confirm_pw(class="form-control form-control-lg", placeholder="Confirm Password") }}
+                                                {{ form.confirm_pw(class="form-control form-control-lg", placeholder="Confirm Password", id="confirm_pw") }}
                                                 {% for error in form.confirm_pw.errors %}
                                                     <div class="text-danger">{{ error }}</div>
                                                 {% endfor %}
                                             </div>
+                                            <div class="checklist" id="confirm-pw-checklist">
+                                                <div id="match-check" class="invalid">Must match password</div>
+                                            </div>
                                         </div>
-
-                                       
                                         <div class="submit pt-1 mb-4">
                                             {{ form.submit(class="btn btn-lg btn-block btn-yellow text-white") }}
                                         </div>
-
                                         <div class="login">
                                             <p class="mb-5 pb-lg-2 text-light">Already have an account? 
                                                 <a href="{{url_for('login')}}" class="text-light login-link">Login here</a>
@@ -178,8 +201,110 @@
     document.addEventListener("DOMContentLoaded", function() {
         const card = document.getElementById("registerCard");
         setTimeout(() => card.classList.add("show"), 100);
+
+        // Full Name Validation
+        const fullNameInput = document.getElementById("full_name");
+        const nameFormatCheck = document.getElementById("name-format-check");
+        fullNameInput.addEventListener("input", function() {
+            const fullName = this.value;
+            if (/^[A-Za-z\s]+$/.test(fullName) && fullName.trim().length > 0) {
+                nameFormatCheck.classList.remove("invalid");
+                nameFormatCheck.classList.add("valid");
+            } else {
+                nameFormatCheck.classList.remove("valid");
+                nameFormatCheck.classList.add("invalid");
+            }
+        });
+
+        // Email Validation
+        const emailInput = document.getElementById("email");
+        const emailFormatCheck = document.getElementById("email-format-check");
+        emailInput.addEventListener("input", function() {
+            const email = this.value;
+            if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                emailFormatCheck.classList.remove("invalid");
+                emailFormatCheck.classList.add("valid");
+            } else {
+                emailFormatCheck.classList.remove("valid");
+                emailFormatCheck.classList.add("invalid");
+            }
+        });
+
+        // Phone Number Validation
+        const phoneInput = document.getElementById("phone_num");
+        const phoneFormatCheck = document.getElementById("phone-format-check");
+        phoneInput.addEventListener("input", function() {
+            const phone = this.value.replace(/\s/g, '');
+            if (/^\+?977?\d{10}$/.test(phone)) {
+                phoneFormatCheck.classList.remove("invalid");
+                phoneFormatCheck.classList.add("valid");
+            } else {
+                phoneFormatCheck.classList.remove("valid");
+                phoneFormatCheck.classList.add("invalid");
+            }
+        });
+
+        // Password Validation
+        const passwordInput = document.getElementById("password");
+        const lengthCheck = document.getElementById("length-check");
+        const uppercaseCheck = document.getElementById("uppercase-check");
+        const lowercaseCheck = document.getElementById("lowercase-check");
+        const numberCheck = document.getElementById("number-check");
+        const specialCheck = document.getElementById("special-check");
+        passwordInput.addEventListener("input", function() {
+            const password = this.value;
+            if (password.length >= 8) {
+                lengthCheck.classList.remove("invalid");
+                lengthCheck.classList.add("valid");
+            } else {
+                lengthCheck.classList.remove("valid");
+                lengthCheck.classList.add("invalid");
+            }
+            if (/[A-Z]/.test(password)) {
+                uppercaseCheck.classList.remove("invalid");
+                uppercaseCheck.classList.add("valid");
+            } else {
+                uppercaseCheck.classList.remove("valid");
+                uppercaseCheck.classList.add("invalid");
+            }
+            if (/[a-z]/.test(password)) {
+                lowercaseCheck.classList.remove("invalid");
+                lowercaseCheck.classList.add("valid");
+            } else {
+                lowercaseCheck.classList.remove("valid");
+                lowercaseCheck.classList.add("invalid");
+            }
+            if (/\d/.test(password)) {
+                numberCheck.classList.remove("invalid");
+                numberCheck.classList.add("valid");
+            } else {
+                numberCheck.classList.remove("valid");
+                numberCheck.classList.add("invalid");
+            }
+            if (/[@$!%*?&]/.test(password)) {
+                specialCheck.classList.remove("invalid");
+                specialCheck.classList.add("valid");
+            } else {
+                specialCheck.classList.remove("valid");
+                specialCheck.classList.add("invalid");
+            }
+        });
+
+        // Confirm Password Validation
+        const confirmPwInput = document.getElementById("confirm_pw");
+        const matchCheck = document.getElementById("match-check");
+        confirmPwInput.addEventListener("input", function() {
+            const confirmPw = this.value;
+            const password = passwordInput.value;
+            if (confirmPw === password && confirmPw.length > 0) {
+                matchCheck.classList.remove("invalid");
+                matchCheck.classList.add("valid");
+            } else {
+                matchCheck.classList.remove("valid");
+                matchCheck.classList.add("invalid");
+            }
+        });
     });
 </script>
 </body>
 </html>
-

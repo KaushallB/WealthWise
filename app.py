@@ -49,10 +49,12 @@ enc = Bcrypt(app)
 
 
 # Database
-app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_HOST'] = 'localhost' 
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'wealthwisenew'
+app.config['MYSQL_PORT'] = 3306
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 mysql = MySQL(app)
 
 # Mailpit 
@@ -70,7 +72,18 @@ app.config['WTF_CSRF_ENABLED'] = True
 def is_logged_in():
     return 'user_id' in session
 
-
+try:
+    conn = MySQLdb.connect(
+        host='localhost',
+        user='root',
+        passwd='',
+        db='wealthwisenew'
+    )
+    print("Connection successful!")
+    conn.close()
+except MySQLdb.Error as e:
+    print(f"Connection failed: {e}")
+    
 @app.route('/')
 def home():
     return redirect(url_for('login'))
