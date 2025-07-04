@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Income - WealthWise</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Custom CSS -->
+<style>
+body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Arial', sans-serif;
+}    
+.card {
+            border: none;
+            border-radius: 20px;
+            background: #fff;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+}
+.card:hover {
+            transform: translateY(-5px);
+}
+.form-control, .form-select {
+            border-color: #3498db;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+}
+.form-control:focus, .form-select:focus {
+            border-color: #e67e22;
+            box-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+}
+.btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+}
+.btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+            transform: scale(1.05);
+}
+.btn-secondary {
+            background-color: #e67e22;
+            border-color: #e67e22;
+            border-radius: 10px;
+            padding: 10px 20px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+}
+.btn-secondary:hover {
+            background-color: #d35400;
+            border-color: #d35400;
+            transform: scale(1.05);
+}
+.income-table {
+            background-color: #e8f0fe;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+}
+.income-row {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.5s ease-out;
+}
+.income-row:last-child {
+            border-bottom: none;
+}
+@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+}
+@keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+}
+.fade-in {
+            animation: fadeIn 1s ease-in;
+}
+</style>
+</head>
+<body>
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-4" style="max-width: 700px; width: 100%;">
+            <h2 class="text-center mb-4 fade-in" style="color: #333; font-size: 2.5rem;">
+            <img src="./static/assets/logo.png" alt="WealthWise Logo" class="img-fluid w-25" style="border-radius: 1rem;"> Add Income</h2>
+        <form id="income-form">
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount (Rs)</label>
+                <input type="number" id="amount" name="amount" class="form-control" placeholder="Enter amount" step="0.01" required>
+            </div>
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select" required>
+                    <option value="">Select a category</option>
+                        <option value="salary">Salary</option>
+                        <option value="savings">Savings</option>
+                        <option value="business">Business</option>
+                        <option value="other">Other</option>
+                    </select>
+            </div>
+            <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" id="date" name="date" class="form-control" required>
+            </div> 
+            
+        <div class="mb-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="text" id="description" name="descripition" class="form-control" placeholder="Add a note (e.g., To Pay)" required>
+        </div>  
+        <input type="hidden" id="income-id" name="income_id">
+
+        <button type="submit" id="action-btn" class="btn btn-primary w-100">Add Income</button>
+        </form>
+        <div class="text-center mt-3">
+                <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        <div class="income-card">
+            <h5 class="text-center">Recent Incomes</h5>
+            <div class="card mb-2 p-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>Salary:15000.00(2025-05-09)-Monthly Salary</span>
+                    <div>
+                        <button class="btn btn-sm btn-primary me-2">Edit</button>
+                        <button class="btn btn-sm btn-danger me-2">Delete</button>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        </div>
+        </div>
+        </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background-color: white; padding: 20px; border-radius: 10px;">
+    
+    <div style="text-align: center;">
+      <img src="https://imgur.com/KREAI4T.png" alt="WealthWise Logo" style="width: 150px; margin-bottom: 20px;">
+    </div>
+    
+    <h2 style="color: #2c3e50; text-align: center">Daily Budget Update for <span style="color: #27ae60;">WealthWise</span>, {{full_name}}!</h2>
+    
+    <p style="font-size: 16px; color: #555;">Good morning! Here's your budget overview for today:</p>
+    <ul style="font-size: 16px; color: #555; list-style-type: none; padding-left: 0;">
+      <li>Total Income: Rs {{ total_income|round(2) }}</li>
+      <li>Needs Spent: Rs {{ needs_spent|round(2) }} / Rs {{ needs_budget|round(2) }}</li>
+      <li>Wants Spent: Rs {{ wants_spent|round(2) }} / Rs {{ wants_budget|round(2) }}</li>
+      <li>Savings: Rs {{ savings_saved|round(2) }} / Rs {{ savings_budget|round(2) }}</li>
+    </ul>
+    
+    <p style="font-size: 25px; color: #555;"><b>Please update your income and expenses today to stay on track.</b> Log in at <a href="http://localhost:5000/login" style="color: #27ae60; text-decoration: underline;">WealthWise</a>.</p>
+    
+    <p style="margin-top: 30px; font-size: 14px; color: #aaa; text-align:center;">© 2025 WealthWise. All rights reserved.</p>
+  </div>
+</body>
+</html>
