@@ -191,7 +191,7 @@ body {
             <div class="row">
                 <div class="col-md-6">
                     <p><strong>Needs Budget:</strong> Rs {{ needs_spent|default(0)|float|round(2) }} / Rs {{ needs_limit|default(0)|float|round(2) }}</p>
-                    <div class="progress mb-2" style="height: 12px;">
+                    <div class="progress mb-2 bg-white" style="height: 12px;">
                         {% set needs_limit_float = needs_limit|default(0)|float %}
                         {% set needs_spent_float = needs_spent|default(0)|float %}
                         {% set needs_percentage = (needs_spent_float / needs_limit_float * 100) if needs_limit_float > 0 else 0 %}
@@ -228,7 +228,7 @@ body {
                 </div>
                 <div class="col-md-6">
                     <p><strong>Wants Budget:</strong> Rs {{ wants_spent|default(0)|float|round(2) }} / Rs {{ wants_limit|default(0)|float|round(2) }}</p>
-                    <div class="progress mb-2" style="height: 12px;">
+                    <div class="progress mb-2 bg-white" style="height: 12px;">
                         {% set wants_limit_float = wants_limit|default(0)|float %}
                         {% set wants_spent_float = wants_spent|default(0)|float %}
                         {% set wants_percentage = (wants_spent_float / wants_limit_float * 100) if wants_limit_float > 0 else 0 %}
