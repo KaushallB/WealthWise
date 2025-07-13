@@ -26,27 +26,10 @@ import traceback
 
 app = Flask(__name__)
 
-@app.route('/test_otp_email')
-def test_otp_email():
-    return render_template('otp_email.html', full_name='Test User', otp='123456')
-
-'''
-google_blueprint = make_google_blueprint(
-    client_id="666426612022-ncopuubkoer69h1hrq3qkig6sjdjvtfg.apps.googleusercontent.com",
-    client_secret="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",
-    scope=[
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/userinfo.profile"
-    ],
-    redirect_url="/login/google/authorized"
-)
-app.register_blueprint(google_blueprint, url_prefix="/login")
-'''
+app.config['WTF_CSRF_ENABLED'] = True
 
 app.secret_key = 'WealthWise'
 enc = Bcrypt(app)
-
 
 # Database
 app.config['MYSQL_HOST'] = 'localhost' 
@@ -67,7 +50,7 @@ app.config['MAIL_PASSWORD'] = None
 app.config['MAIL_DEFAULT_SENDER'] = 'noreply@wealthwise.com'
 mail = Mail(app)
 
-app.config['WTF_CSRF_ENABLED'] = True
+
 
 def is_logged_in():
     return 'user_id' in session
@@ -84,6 +67,25 @@ try:
 except MySQLdb.Error as e:
     print(f"Connection failed: {e}")
     
+@app.route('/test_otp_email')
+def test_otp_email():
+    return render_template('otp_email.html', full_name='Test User', otp='123456')
+
+'''
+google_blueprint = make_google_blueprint(
+    client_id="666426612022-ncopuubkoer69h1hrq3qkig6sjdjvtfg.apps.googleusercontent.com",
+    client_secret="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",
+    scope=[
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile"
+    ],
+    redirect_url="/login/google/authorized"
+)
+app.register_blueprint(google_blueprint, url_prefix="/login")
+'''
+
+
 @app.route('/')
 def home():
     return redirect(url_for('login'))
@@ -94,6 +96,26 @@ def is_email(identifier):
 def generate_otp(length=6):
     return ''.join(random.choices(string.digits,k=length))
 
+# TOGGLE2FA
+@app.route('/toggle_2fa', methods=['POST'])
+def toggle_2fa():
+    if not is_logged_in():
+        return jsonify({'success': False, 'message': 'Please log in to toggle 2FA.'}), 401
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'No JSON data provided.'}), 400
+    
+    twofa_enabled = data.get('twofa_enabled', False)
+    current_twofa_state = session.get('twofa_enabled', False)
+
+    if twofa_enabled != current_twofa_state:  # Only update if state changes
+        session['twofa_enabled'] = twofa_enabled
+        flash('2FA ' + ('enabled' if twofa_enabled else 'disabled') + ' successfully.', 'success')
+    
+    return jsonify({'success': True, 'message': '2FA status updated.'})
+
+# LOGIN
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     log = LoginForm()
@@ -104,12 +126,10 @@ def login():
         try:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
 
-            # Check if a password reset is pending
             if 'reset_token' in session:
                 flash('Please reset your password using the link sent to your email before logging in.', 'danger')
                 return redirect(url_for('forgot_password'))
 
-            # Check if another user is already logged in
             if 'user_id' in session:
                 flash('Another user is already logged in. Please log out before logging in with a different account.', 'danger')
                 return redirect(url_for('logout'))
@@ -127,8 +147,12 @@ def login():
                 full_name = account['full_name']
                 email = account['email']
                 if enc.check_password_hash(stored_hashed_pw, pw):
-                    # Check if OTP data already exists to avoid resending
-                    if 'otp_data' not in session or not session.get('otp_data'):
+                    # Always default 2FA to True unless user disables it
+                    twofa_enabled = session.get('twofa_enabled')
+                    if twofa_enabled is None:
+                        session['twofa_enabled'] = True  # Set default for new session
+                        twofa_enabled = True
+                    if twofa_enabled and 'otp_data' not in session:
                         otp = generate_otp()
                         otp_expiry = (datetime.now() + timedelta(minutes=5)).timestamp()
                         session['otp_data'] = {
@@ -144,10 +168,14 @@ def login():
                             msg = Message("Your Wealthwise OTP", recipients=[email])
                             msg.html = render_template("otp_email.html", full_name=full_name, otp=otp)
                             mail.send(msg)
-                            flash("An OTP has been sent to your mail", 'info')
+                            flash("An OTP has been sent to your mail.", 'info')
                         except Exception as email_error:
                             flash(f'Error Sending OTP: {str(email_error)}', 'danger')
-                    return redirect(url_for('verify_otp'))
+                        return redirect(url_for('verify_otp'))
+                    else:
+                        session['user_id'] = account['id']
+                        flash('Login Successful', 'success')
+                        return redirect(url_for('dashboard', user_id=account['id']))
                 else:
                     flash('Invalid Password', 'danger')
             else:
@@ -159,7 +187,49 @@ def login():
             
     return render_template('login.html', form=log)
 
+#VERIFYOTP
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    otp_data = session.get('otp_data')
+    if not otp_data:
+        flash('No OTP session found. Please login again', 'danger')
+        return redirect(url_for('login'))
+    
+    # Check if OTP has expired
+    if datetime.now().timestamp() > otp_data['expires']:
+        session.pop('otp_data', None)
+        flash('OTP has expired. Please Login again to receive a new OTP', 'danger')
+        return redirect(url_for('login'))
+    
+    # Check for lockout due to too many attempts
+    if otp_data.get('lockout_time') and datetime.now().timestamp() < otp_data['lockout_time']:
+        remaining_time = int(otp_data['lockout_time'] - datetime.now().timestamp())
+        flash(f'Too many invalid attempts. Please wait {remaining_time} seconds for a new OTP.', 'danger')
+        return render_template('verify_otp.html')
+    
+    if request.method == 'POST':
+        user_otp = request.form.get('otp', '').strip()
+        otp_data['attempts'] += 1
+        session['otp_data'] = otp_data  # Update attempts in session
+    
+        if user_otp == otp_data['otp']:
+            session['user_id'] = otp_data['user_id']
+            session['twofa_enabled'] = True  # Mark 2FA as enabled in session
+            session.pop('otp_data', None)
+            flash('Login Successful via OTP', 'success')
+            return redirect(url_for('dashboard', user_id=otp_data['user_id']))
+        else:
+            if otp_data['attempts'] >= 5:
+                otp_data['lockout_time'] = (datetime.now() + timedelta(minutes=5)).timestamp()
+                session['otp_data'] = otp_data
+                flash('Too many invalid OTP attempts. A new OTP will be sent after 5 minutes.', 'danger')
+                return render_template('verify_otp.html')
+            else:
+                flash(f'Invalid OTP. Please try again. Attempts remaining: {5 - otp_data["attempts"]}', 'danger')
+    
+    return render_template('verify_otp.html')
 
+#RESENDOTP
 @app.route('/resend_otp', methods=['GET'])
 def resend_otp():
     otp_data = session.get('otp_data')
@@ -200,52 +270,7 @@ def resend_otp():
         return redirect(url_for('verify_otp'))
 
     return redirect(url_for('verify_otp'))
-     
-@app.route('/verify_otp', methods=['GET', 'POST'])
-def verify_otp():
-    otp_data = session.get('otp_data')
-    if not otp_data:
-        flash('No OTP session found. Please login again', 'danger')
-        return redirect(url_for('login'))
-    
-    if datetime.now().timestamp() > otp_data['expires']:
-        session.pop('otp_data', None)
-        flash('OTP has expired. Please Login again to receive a new OTP', 'danger')
-        return redirect(url_for('login'))
-    
-    # Checking for invalid attempts
-    if otp_data.get('lockout_time') and datetime.now().timestamp() < otp_data['lockout_time']:
-        remaining_time = int(otp_data['lockout_time'] - datetime.now().timestamp())
-        flash(f'Too many invalid attempts. Please wait {remaining_time} seconds for a new OTP.', 'danger')
-        return render_template('verify_otp.html')
-    
-    if request.method == 'POST':
-        user_otp = request.form.get('otp', '').strip()
-        otp_data['attempts'] += 1
-        session['otp_data'] = otp_data  # Updating session with new attempt count
-    
-        if user_otp == otp_data['otp']:
-            session['user_id'] = otp_data['user_id']
-            email = otp_data['email']
-            full_name = otp_data['full_name']
-            session.pop('otp_data', None)
-            
-            flash('Login Successful', 'success')
-            return redirect(url_for('dashboard', user_id=otp_data['user_id']))
-        
-        else:
-            
-            if otp_data['attempts'] >= 5:
-                otp_data['lockout_time'] = (datetime.now() + timedelta(minutes=5)).timestamp()
-                session['otp_data'] = otp_data
-                flash('Too many invalid OTP attempts. A new OTP will be sent after 5 minutes.', 'danger')
-                return render_template('verify_otp.html')
-            else:
-                flash('Invalid OTP. Please try again. Attempts remaining: {}'.format(5 - otp_data['attempts']), 'danger')
-    
-    return render_template('verify_otp.html')
-            
-            
+             
                         
 """
 def google_login():
@@ -282,6 +307,8 @@ def google_login():
     flash("Failed to log in via Google", "danger")
     return redirect(url_for("login"))
 """
+
+#FORGOTPASSWORD
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
     form = ForgotPasswordForm()
@@ -330,6 +357,7 @@ def forgot_password():
 
     return render_template('forgot_password.html', form=form)
 
+#RESETPASSWORD
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     # Validate token
@@ -381,7 +409,7 @@ def reset_password(token):
 
     return render_template('reset_password.html', form=form, token=token)
 
-
+#REGISTRATION
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     form = RegistrationForm()
@@ -424,6 +452,7 @@ def registration():
 
     return render_template('register.html', form=form)
 
+#LOGOUT
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
@@ -1253,7 +1282,7 @@ def view_reports(user_id):
             transaction_type = transaction['transaction_type']
             category = transaction['category'].lower()
             
-            if transaction_type == 'income' and category != 'savings':  # FIXED: Exclude savings from income
+            if transaction_type == 'income' and category != 'savings':  # Exclude savings from income
                 total_income += amount
             elif transaction_type == 'expense':
                 total_expenses += amount
@@ -1265,7 +1294,7 @@ def view_reports(user_id):
                     savings_made += amount
         
         # Calculate net balance
-        net_balance = total_income - total_expenses - savings_made  # FIXED: Subtract savings
+        net_balance = total_income - total_expenses - savings_made  # Subtract savings
         
         # Get budget allocations
         cursor.execute('SELECT * FROM budget_allocations WHERE user_id=%s', (user_id,))
@@ -1312,7 +1341,7 @@ def view_reports(user_id):
                              user=user,
                              username=user['full_name'],
                              total_income=float(total_income),
-                             total_exp=float(total_expenses + savings_made),  # FIXED: Include savings in expenses
+                             total_exp=float(total_expenses + savings_made),  
                              net_balance=float(net_balance),
                              needs_spent=float(needs_spent),
                              wants_spent=float(wants_spent),

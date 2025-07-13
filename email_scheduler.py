@@ -120,8 +120,8 @@ def run_scheduler():
             current_date = current_time.date()
             
             # Send between (5-minute window)
-            if (current_time.hour == 8 and 
-                18 <= current_time.minute <= 20 and 
+            if (current_time.hour == 23 and 
+                13 <= current_time.minute <= 15 and 
                 last_sent_date != current_date):
                 
                 print(f"Triggering daily reminders at {current_time}")
