@@ -7,7 +7,7 @@
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/logowhite.png') }}">
     <title>WealthWise - Register</title>
     <style>
-        .logo-container {
+         .logo-container {
             text-align: center;
             margin-bottom: 20px;
         }
@@ -30,22 +30,24 @@
         .checklist-box {
             display: none;
             position: absolute;
-            background-color: #2c3e50; /* Dark blue to match theme */
+            background-color: #2c3e50; 
             color: #fff;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
             z-index: 1000;
             font-size: 0.9em;
+            top: 100%; 
+            left: 0;
         }
         .checklist-item {
             margin: 5px 0;
         }
         .checklist-item.valid {
-            color:rgb(186, 240, 8); /* Yellow from your theme */
+            color: rgb(186, 240, 8); 
         }
         .checklist-item.invalid {
-            color: #e74c3c; /* Red for invalid, contrasting yet thematic */
+            color: #e74c3c; 
         }
         .form-outline:hover .checklist-box, .form-outline:focus-within .checklist-box {
             display: block;
@@ -166,10 +168,10 @@
                                             </div>
                     <div class="checklist-box" id="password-checklist-box">
                         <div class="checklist-item" id="length-check">At least 8 characters</div>
-                        <div class="checklist-item" id="uppercase-check">Atleast one uppercase letter</div>
-                        <div class="checklist-item" id="lowercase-check">Atleast one lowercase letter</div>
-                        <div class="checklist-item" id="number-check">Atleast one number</div>
-                        <div class="checklist-item" id="special-check">Atleast one special character (e.g., @$!%*?&)</div>
+                        <div class="checklist-item" id="uppercase-check">At least one uppercase letter</div>
+                        <div class="checklist-item" id="lowercase-check">At least one lowercase letter</div>
+                        <div class="checklist-item" id="number-check">At least one number</div>
+                        <div class="checklist-item" id="special-check">At least one special character (e.g., @$!%*?&)</div>
                     </div>
                                         </div>
                                         <div data-mdb-input-init class="form-outline mb-4 position-relative">
@@ -317,3 +319,5 @@
         });
     });
 </script>
+</body>
+</html>
