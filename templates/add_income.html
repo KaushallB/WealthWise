@@ -72,8 +72,6 @@ body {
 .fade-in {
     animation: fadeIn 1s ease-in;
 }
-
-
 </style>
 
 <div class="container mt-5 d-flex justify-content-center">
@@ -115,9 +113,9 @@ body {
             <a href="{{url_for('dashboard',user_id=user.id)}}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
         <div class="income-card">
-            <h5 class="text-center">Recent Incomes (This Month)</h5>
-            {% if recent_incomes %}
-                {% for recent_income in recent_incomes %}
+            <h5 class="text-center">All Incomes</h5>
+            {% if all_incomes %}
+                {% for recent_income in all_incomes %}
                 <div class="card mb-2 p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>{{recent_income.category|capitalize}}: Rs {{recent_income.amount|round(2)}}
@@ -132,7 +130,7 @@ body {
                 </div>
                  {% endfor %}
             {% else %}
-                <p class="text-center">No recent incomes found for this month.</p>
+                <p class="text-center">No incomes recorded.</p>
             {% endif %}
         </div>
 
