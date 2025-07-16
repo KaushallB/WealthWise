@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -66,7 +67,7 @@
             min-width: 200px;
         }
         .dropdown-item label {
-            width: 100;
+            width: 100%;
         }
         #sidebar {
             position: fixed;
@@ -124,12 +125,12 @@
         <aside id="sidebar">
             <div class="h-100">
                 <div class="sidebar-logo">
-                    <a href="{{ url_for('dashboard', user_id=user.id) }}"> <img src="{{ url_for('static', filename='assets/logon.png') }}" alt="logo" class=" w-75" style="border-radius: 1rem 0 0 1rem;" /></a>   
+                    <a href="{{ url_for('dashboard', user_id=user['id']) }}"> 
+                        <img src="{{ url_for('static', filename='assets/logon.png') }}" alt="logo" class="w-75" style="border-radius: 1rem 0 0 1rem;" />
+                    </a>   
                 </div>
                 <ul class="sidebar-nav">
-                    <li class="sidebar-header">
-                        User Control Panel
-                    </li>
+                    <li class="sidebar-header">User Control Panel</li>
                     <li class="sidebar-item">
                         <a href="{{ url_for('dashboard', user_id=user['id']) }}" class="sidebar-link">
                             <i class="bi bi-speedometer2"></i>
@@ -146,7 +147,7 @@
                                 <a href="{{ url_for('add_income', user_id=user['id']) }}" class="sidebar-link">Add Income</a>
                             </li>
                             <li class="sidebar-item">
-                                 <a href="{{ url_for('add_expense', user_id=user['id']) }}" class="sidebar-link">Add Expenses/Savings</a>
+                                <a href="{{ url_for('add_expense', user_id=user['id']) }}" class="sidebar-link">Add Expenses/Savings</a>
                             </li>
                             <li class="sidebar-item">
                                 <a href="{{ url_for('view_reports', user_id=user['id']) }}" class="sidebar-link">View Reports</a>
@@ -154,7 +155,7 @@
                         </ul>
                     </li>
                     <li class="sidebar-item">
-                        <a href="{{ url_for('chatbot', user_id=user.id) }}" class="sidebar-link">
+                        <a href="{{ url_for('chatbot', user_id=user['id']) }}" class="sidebar-link">
                             <i class="bi bi-robot"></i>
                             Chatbot
                         </a>
@@ -194,7 +195,7 @@
                             <div class="dropdown-menu dropdown-menu-end">
                                 <div class="dropdown-item twofa-toggle"> 
                                     <label class="switch">
-                                        <input type="checkbox" id="twofaToggle" {% if session.get('twofa_enabled', False) %}checked{% endif %}>
+                                        <input type="checkbox" id="twofaToggle" {% if user['use_otp'] %}checked{% endif %}>
                                         <span class="slider"></span>
                                     </label>
                                     <span class="switch-label">2FA</span>
@@ -257,35 +258,52 @@
                 }
             });
 
-            // 2FA Toggle Logic (using AJAX with event prevention)
+            // 2FA Toggle Logic
             const twofaToggle = document.getElementById('twofaToggle');
             if (twofaToggle) {
                 twofaToggle.addEventListener('change', function(event) {
-                    event.preventDefault(); 
-                    event.stopPropagation(); 
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const isEnabled = this.checked;
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
                     const data = {
-                        twofa_enabled: this.checked
+                        use_otp: isEnabled
                     };
 
-                    fetch('/toggle_2fa', {
+                    fetch('/toggle_2fa/{{ user["id"] }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfToken
                         },
                         body: JSON.stringify(data)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(result => {
                         if (result.success) {
-                            // Redirect to dashboard to show the flash message
-                            window.location.href = `/dashboard/{{ user['id'] }}`;
+                            // Show success message immediately
+                            const flashContainer = document.querySelector('.container');
+                            const flashDiv = document.createElement('div');
+                            flashDiv.className = `flash-message alert alert-success alert-dismissible fade show`;
+                            flashDiv.innerHTML = `${result.message} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+                            flashContainer.insertBefore(flashDiv, flashContainer.firstChild);
+                            // Update toggle state
+                            twofaToggle.checked = isEnabled;
                         } else {
-                            alert(result.message); // Show error if any
+                            // Show error message and revert toggle
+                            alert(result.message);
+                            twofaToggle.checked = !isEnabled;
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         alert('An error occurred while toggling 2FA.');
+                        twofaToggle.checked = !isEnabled;
                     });
                 });
             }
