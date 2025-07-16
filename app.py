@@ -94,36 +94,23 @@ def generate_otp(length=6):
     return ''.join(random.choices(string.digits,k=length))
 
 # TOGGLE2FA
-@app.route('/toggle_2fa/<int:user_id>', methods=['POST'])
-def toggle_2fa(user_id):
-    if not is_logged_in() or session['user_id'] != user_id:
+@app.route('/toggle_2fa', methods=['POST'])
+def toggle_2fa():
+    if not is_logged_in():
         return jsonify({'success': False, 'message': 'Please log in to toggle 2FA.'}), 401
-
+    
     data = request.get_json()
     if not data:
         return jsonify({'success': False, 'message': 'No JSON data provided.'}), 400
+    
+    twofa_enabled = data.get('twofa_enabled', False)
+    current_twofa_state = session.get('twofa_enabled', False)
 
-    use_otp = data.get('use_otp', False)
-    try:
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT use_otp FROM users WHERE id = %s', (user_id,))
-        user = cursor.fetchone()
-        if not user:
-            cursor.close()
-            return jsonify({'success': False, 'message': 'User not found.'}), 404
-
-        current_use_otp = user['use_otp']
-        if use_otp != current_use_otp:  # Only update if state changes
-            cursor.execute('UPDATE users SET use_otp = %s WHERE id = %s', (use_otp, user_id))
-            mysql.connection.commit()
-            session['twofa_enabled'] = use_otp  # Sync session with database
-            flash('2FA ' + ('enabled' if use_otp else 'disabled') + ' successfully.', 'success')
-        
-        cursor.close()
-        return jsonify({'success': True, 'message': '2FA ' + ('enabled' if use_otp else 'disabled') + ' successfully.'})
-    except Exception as e:
-        flash(f'Error toggling 2FA: {str(e)}', 'danger')
-        return jsonify({'success': False, 'message': f'Error toggling 2FA: {str(e)}'}), 500
+    if twofa_enabled != current_twofa_state:  # Only update if state changes
+        session['twofa_enabled'] = twofa_enabled
+        flash('2FA ' + ('enabled' if twofa_enabled else 'disabled') + ' successfully.', 'success')
+    
+    return jsonify({'success': True, 'message': '2FA status updated.'})
 
 # LOGIN
 @app.route('/login', methods=['GET', 'POST'])
