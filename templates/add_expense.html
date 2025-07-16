@@ -269,7 +269,6 @@ body {
             </small>
         </div>
 
-
         <!-- Budget Warning Alert - Fixing DIVISION BY ZERO -->
         {% set needs_limit_float = needs_limit|default(0)|float %}
         {% set wants_limit_float = wants_limit|default(0)|float %}
@@ -326,9 +325,9 @@ body {
             <a href="{{ url_for('dashboard', user_id=user.id) }}" class="btn btn-secondary">Back to Dashboard</a>
         </div>
         <div class="expense-card">
-            <h5 class="text-center">Recent Transactions (This Month)</h5>
-            {% if recent_expenses %}
-                {% for recent_expense in recent_expenses %}
+            <h5 class="text-center">All Expenses</h5>
+            {% if all_expenses %}
+                {% for recent_expense in all_expenses %}
                 <div class="card mb-2 p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span>{{ recent_expense.category|capitalize }}: Rs {{ recent_expense.amount|round(2) }} ({{ recent_expense.date }}) - {{ recent_expense.description if recent_expense.description else '' }}</span>
@@ -349,7 +348,7 @@ body {
                 </div>
                 {% endfor %}
             {% else %}
-                <p class="text-center">No recent transactions found for this month.</p>
+                <p class="text-center">No expenses recorded.</p>
             {% endif %}
         </div>
     </div>

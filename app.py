@@ -601,8 +601,7 @@ def chatbot(user_id):
             Needs are essential expenses (e.g., rent, groceries, utilities); wants are non-essential (e.g., entertainment, dining out). 
             The average income of Nepalese students is from around Rs 5000.00 to Rs 25000.00.
             Use the user's financial data. Stay professional, avoid non-financial topics, and do not ask questions unless prompted. 
-            If the query is unclear, suggest asking about budgeting or expenses.
-
+            If the query is unclear, suggest asking about budgeting or expenses. Start with Namaste.
             User's financial data: {financial_data}
 
             Conversation history: {context}
@@ -632,7 +631,7 @@ def chatbot(user_id):
         return jsonify({'response': f'Error: {str(e)}'}), 500
 
 #ADDINCOME
-@app.route('/add_income/<int:user_id>', methods=['GET','POST'])
+@app.route('/add_income/<int:user_id>', methods=['GET', 'POST'])
 def add_income(user_id):
     if not is_logged_in():
         flash('Please log in to access this page.', 'danger')
@@ -682,24 +681,20 @@ def add_income(user_id):
                 flash(f'Error adding income: {str(e)}', 'danger')
                 print(f"Error in add_income: {str(e)}")
 
-    # Get recent income transactions for CURRENT MONTH
-    current_month = datetime.now().month
-    current_year = datetime.now().year
+    # Get all income transactions (no monthly filter)
     cursor.execute('''
         SELECT * FROM transactions 
         WHERE user_id=%s AND transaction_type='income' 
-        AND MONTH(date)=%s AND YEAR(date)=%s 
-        ORDER BY date DESC LIMIT 5
-    ''', (user_id, current_month, current_year))
-    recent_incomes = cursor.fetchall()
+        ORDER BY date DESC
+    ''', (user_id,))
+    all_incomes = cursor.fetchall()
 
     # Get user info
     cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
     
     cursor.close()
-    return render_template('add_income.html', user=user, recent_incomes=recent_incomes)
-
+    return render_template('add_income.html', user=user, all_incomes=all_incomes)
 
 
 #EDITINCOME 
@@ -723,11 +718,11 @@ def edit_income(user_id, income_id):
             flash('Income not found.', 'danger')
             return redirect(url_for('add_income', user_id=user_id))
         
-        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC LIMIT 5", (user_id,))
-        recent_incomes = cursor.fetchall()
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='income' ORDER BY date DESC", (user_id,))
+        all_incomes = cursor.fetchall()
         
         today = datetime.now().strftime('%Y-%m-%d')
-        return render_template('add_income.html', user=user, today=today, recent_incomes=recent_incomes, income=income)
+        return render_template('add_income.html', user=user, today=today, all_incomes=all_incomes, income=income)
     
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
@@ -811,16 +806,14 @@ def add_expense(user_id):
                 
                 mysql.connection.commit()
                 
-                # Only check budget warnings for 'needs' and 'wants', not 'savings'
+                # Budget warning logic (unchanged, still monthly-based)
                 if category.lower() in ['needs', 'wants']:
                     current_month = datetime.now().month
                     current_year = datetime.now().year
                     
-                    # Getting user info for email
                     cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
                     user = cursor.fetchone()
                     
-                    # Get monthly income (excluding savings from income)
                     cursor.execute('''
                         SELECT SUM(amount) as monthly_income 
                         FROM transactions 
@@ -835,7 +828,6 @@ def add_expense(user_id):
                     allocation = cursor.fetchone()
                     
                     if allocation and monthly_income > 0:
-                        # Calculating limits for needs and wants only
                         if category.lower() == 'needs':
                             limit = (monthly_income * allocation['needs_percent']) / 100
                             category_name = "Needs"
@@ -843,7 +835,6 @@ def add_expense(user_id):
                             limit = (monthly_income * allocation['wants_percent']) / 100
                             category_name = "Wants"
                         
-                        # Check current spending AFTER adding this expense
                         cursor.execute('''
                             SELECT SUM(amount) as spent 
                             FROM transactions 
@@ -855,9 +846,7 @@ def add_expense(user_id):
                         current_spent = spent_result['spent'] or 0
                         percentage_used = (current_spent / limit) * 100 if limit > 0 else 0
                         
-                        # Sending email warnings based on budget status
                         if current_spent > limit:
-                            # Over budget - send warning email
                             overage = current_spent - limit
                             flash(f'Budget Alert: You have exceeded your {category_name} budget by Rs {overage:.2f} this month. Warning Email has been sent', 'warning')
                             try:
@@ -873,7 +862,7 @@ def add_expense(user_id):
                                 mail.send(msg)
                             except Exception as email_error:
                                 print(f'Error sending budget warning email: {str(email_error)}')
-                        elif percentage_used >= 80:  # 80% threshold
+                        elif percentage_used >= 80:
                             remaining = limit - current_spent
                             flash(f'Budget Notice: You have Rs {remaining:.2f} remaining in your {category_name} budget this month. Warning Email has been sent', 'info')
                             try:
@@ -890,7 +879,6 @@ def add_expense(user_id):
                             except Exception as email_error:
                                 print(f'Error sending budget alert email: {str(email_error)}')
                 
-                # Tracking savings progress (no warnings, just info)
                 elif category.lower() == 'savings':
                     current_month = datetime.now().month
                     current_year = datetime.now().year
@@ -931,23 +919,21 @@ def add_expense(user_id):
                 flash(f'Error adding expense: {str(e)}', 'danger')
                 print(f"Error in add_expense: {str(e)}")
 
-    # Getting recent expense transactions for CURRENT MONTH
-    current_month = datetime.now().month
-    current_year = datetime.now().year
-    
+    # Get all expense transactions (no monthly filter)
     cursor.execute('''
         SELECT * FROM transactions 
         WHERE user_id=%s AND transaction_type='expense' 
-        AND MONTH(date)=%s AND YEAR(date)=%s 
-        ORDER BY date DESC LIMIT 5
-    ''', (user_id, current_month, current_year))
-    recent_expenses = cursor.fetchall()
+        ORDER BY date DESC
+    ''', (user_id,))
+    all_expenses = cursor.fetchall()
 
-    # Getting user info
+    # Get user info
     cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
     user = cursor.fetchone()
     
-    # Getting monthly budget data (excluding savings from income)
+    # Get monthly budget data (unchanged, still monthly-based)
+    current_month = datetime.now().month
+    current_year = datetime.now().year
     cursor.execute('''
         SELECT 
             SUM(CASE WHEN transaction_type = 'income' AND category != 'savings' THEN amount ELSE 0 END) as monthly_income,
@@ -960,7 +946,6 @@ def add_expense(user_id):
     monthly_data = cursor.fetchone()
     monthly_income = monthly_data['monthly_income'] or 0
 
-    # Getting budget allocation
     cursor.execute("SELECT * FROM budget_allocations WHERE user_id = %s", (user_id,))
     allocation = cursor.fetchone()
 
@@ -974,12 +959,11 @@ def add_expense(user_id):
     cursor.close()
     return render_template('add_expense.html', 
                          user=user, 
-                         recent_expenses=recent_expenses,
+                         all_expenses=all_expenses,
                          needs_spent=monthly_data['needs_spent'] or 0,
                          wants_spent=monthly_data['wants_spent'] or 0,
                          needs_limit=needs_limit,
                          wants_limit=wants_limit)
-
 
 #EDITEXPENSE
 @app.route('/edit_expense/<int:user_id>/<int:id>', methods=['GET'])
@@ -1002,18 +986,17 @@ def edit_expense(user_id, id):
             flash('Expense not found.', 'danger')
             return redirect(url_for('add_expense', user_id=user_id))
         
-        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC LIMIT 5", (user_id,))
-        recent_expenses = cursor.fetchall()
+        cursor.execute("SELECT * FROM transactions WHERE user_id=%s AND transaction_type='expense' ORDER BY date DESC", (user_id,))
+        all_expenses = cursor.fetchall()
         
         today = datetime.now().strftime('%Y-%m-%d')
-        return render_template('add_expense.html', user=user, today=today, recent_expenses=recent_expenses, expense=expense)
+        return render_template('add_expense.html', user=user, today=today, all_expenses=all_expenses, expense=expense)
     
     except Exception as e:
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('login'))
     finally:
         cursor.close()
-
 #DELETEEXPENSE
 @app.route('/delete_expense/<int:user_id>/<int:id>', methods=['POST'])
 def delete_expense(user_id, id):
@@ -1255,7 +1238,7 @@ def view_reports(user_id):
             flash('User not found', 'danger')
             return redirect(url_for('login'))
         
-        # Get current month data (following new monthly logic)
+        # Get current month data
         current_month = datetime.now().month
         current_year = datetime.now().year
         
@@ -1266,32 +1249,32 @@ def view_reports(user_id):
                        ORDER BY date DESC''', (user_id, current_month, current_year))
         transactions = cursor.fetchall()
         
-        # Calculate monthly totals using NEW LOGIC (excluding savings from income)
+        # Calculate monthly totals with corrected logic
         total_income = Decimal('0.0')
-        total_expenses = Decimal('0.0')
+        total_expenses = Decimal('0.0')  # Only needs and wants
         needs_spent = Decimal('0.0')
         wants_spent = Decimal('0.0')
         savings_made = Decimal('0.0')
         
-        # Process transactions with corrected logic
         for transaction in transactions:
             amount = transaction['amount']
             transaction_type = transaction['transaction_type']
             category = transaction['category'].lower()
             
-            if transaction_type == 'income' and category != 'savings':  # Exclude savings from income
+            if transaction_type == 'income' and category != 'savings':  # Exclude savings from income for budgeting
                 total_income += amount
             elif transaction_type == 'expense':
-                total_expenses += amount
                 if category == 'needs':
+                    total_expenses += amount
                     needs_spent += amount
                 elif category == 'wants':
+                    total_expenses += amount
                     wants_spent += amount
                 elif category == 'savings':
-                    savings_made += amount
+                    savings_made += amount  # Track savings separately
         
-        # Calculate net balance
-        net_balance = total_income - total_expenses - savings_made  # Subtract savings
+        # Calculate net balance (income - expenses, excluding savings)
+        net_balance = total_income - total_expenses
         
         # Get budget allocations
         cursor.execute('SELECT * FROM budget_allocations WHERE user_id=%s', (user_id,))
@@ -1307,12 +1290,12 @@ def view_reports(user_id):
             wants_percent = Decimal(budget['wants_percent']) if budget.get('wants_percent') else Decimal('30.00')
             savings_percent = Decimal(budget['savings_percent']) if budget.get('savings_percent') else Decimal('20.00')
         
-        # Calculate monthly budget limits (based on actual income, not including savings)
+        # Calculate monthly budget limits
         needs_budget = (needs_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
         wants_budget = (wants_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
         savings_budget = (savings_percent / 100) * total_income if total_income > 0 else Decimal('0.0')
         
-        # Get ALL transactions for JavaScript filtering (but mark them with month/year)
+        # Get ALL transactions for JavaScript filtering
         cursor.execute('''SELECT transaction_type, category, amount, date, description,
                                 MONTH(date) as month, YEAR(date) as year
                        FROM transactions
@@ -1320,7 +1303,7 @@ def view_reports(user_id):
                        ORDER BY date DESC''', (user_id,))
         all_transactions = cursor.fetchall()
         
-        # Format all transactions for JavaScript with month/year info
+        # Format all transactions for JavaScript
         formatted_transactions = []
         for transaction in all_transactions:
             formatted_transactions.append({
@@ -1338,7 +1321,7 @@ def view_reports(user_id):
                              user=user,
                              username=user['full_name'],
                              total_income=float(total_income),
-                             total_exp=float(total_expenses + savings_made),  
+                             total_exp=float(total_expenses),  # Only needs and wants
                              net_balance=float(net_balance),
                              needs_spent=float(needs_spent),
                              wants_spent=float(wants_spent),

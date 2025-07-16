@@ -39,7 +39,6 @@
     </div>
 </div>
 
-
 <!-- Second Row: Budget Cards -->
 <div class="row g-3 mb-3 justify-content-center">
     <!-- Needs Card -->
@@ -112,29 +111,29 @@
     </div>
 </div>
 
-<!-- Third Row: Time Period Filter -->
-
+<!-- Third Row: Net Balance -->
 <div class="row mb-3 justify-content-center">
     <div class="col-12 col-md-4 col-lg-3">
-            {% set net_balance = (total_income|default(0) - total_exp|default(0)) %}
-            <div class="card p-2 text-center {% if net_balance < 0 %}bg-danger text-white border border-3 border-danger{% else %}bg-info text-white{% endif %}" style="{% if net_balance < 0 %}box-shadow: 0 0 10px 2px #dc3545;{% endif %}">
-                <div class="card-title fs-6">Net Balance</div>
-                {% if net_balance >= 0 %}
-                    <h4 class="mb-1 text-white" id="netBalance">Rs {{ net_balance|round(2) }}</h4>
-                    <small>Current Balance</small>
-                {% else %}
-                    <h4 class="mb-1 text-white" id="netBalance">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        Overspent: Rs {{ (net_balance * -1)|round(2) }}
-                    </h4>
-                    <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size: 0.95em;">
-                        <strong>Warning:</strong> You have exceeded your income this period!
-                    </div>
-                {% endif %}
-            </div>
+        {% set net_balance = (total_income|default(0) - total_exp|default(0)) %}
+        <div class="card p-2 text-center {% if net_balance < 0 %}bg-danger text-white border border-3 border-danger{% else %}bg-info text-white{% endif %}" style="{% if net_balance < 0 %}box-shadow: 0 0 10px 2px #dc3545;{% endif %}">
+            <div class="card-title fs-6">Net Balance</div>
+            {% if net_balance >= 0 %}
+                <h4 class="mb-1 text-white" id="netBalance">Rs {{ net_balance|round(2) }}</h4>
+                <small>Current Balance</small>
+            {% else %}
+                <h4 class="mb-1 text-white" id="netBalance">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Overspent: Rs {{ (net_balance * -1)|round(2) }}
+                </h4>
+                <div class="alert alert-warning mt-2 mb-0 p-2" style="font-size: 0.95em;">
+                    <strong>Warning:</strong> You have exceeded your income this period!
+                </div>
+            {% endif %}
         </div>
+    </div>
 </div>
 
+<!-- Fourth Row: Time Period Filter -->
 <div class="row mb-3 justify-content-center">
     <div class="col-12">
         <div class="card p-2">
@@ -151,8 +150,7 @@
     </div>
 </div>
 
-
-<!-- Fourth Row: Charts Tabs -->
+<!-- Fifth Row: Charts Tabs -->
 <div class="row mb-3 justify-content-center">
     <div class="col-12">
         <div class="card p-2">
@@ -302,21 +300,29 @@
         buttons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
-        const today = new Date();
+        const today = new Date(); // Current date and time: 2025-07-16 10:55 PM +0545
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7); // Exactly 7 days ago
+
         filteredData = sampleData.transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date);
+            const transactionDate = new Date(transaction.date + 'T00:00:00'); // Parse date to midnight to avoid time issues
             switch (period) {
-                case '7days': return (today - transactionDate) <= 7 * 24 * 60 * 60 * 1000;
-                case '30days': return (today - transactionDate) <= 30 * 24 * 60 * 60 * 1000;
-                case '90days': return (today - transactionDate) <= 90 * 24 * 60 * 60 * 1000;
-                case 'year': return transactionDate.getFullYear() === today.getFullYear();
+                case '7days':
+                    return transactionDate >= sevenDaysAgo && transactionDate <= today;
+                case '30days':
+                    return (today - transactionDate) <= 30 * 24 * 60 * 60 * 1000;
+                case '90days':
+                    return (today - transactionDate) <= 90 * 24 * 60 * 60 * 1000;
+                case 'year':
+                    return transactionDate.getFullYear() === today.getFullYear();
                 case 'current_month':
                     return transactionDate.getMonth() === today.getMonth() && transactionDate.getFullYear() === today.getFullYear();
-                default: return true; // 'all' case
+                default: // 'all' case
+                    return true;
             }
         });
 
-        // Recalculating metrics based on filtered data
+        // Recalculate metrics and update display
         updateMetrics();
         updateMetricsDisplay();
         reinitializeCharts();
@@ -324,10 +330,10 @@
 
     function updateMetrics() {
         currentMetrics.totalIncome = Math.max(filteredData.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0), 0);
-        currentMetrics.totalExpenses = Math.max(filteredData.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.totalExpenses = Math.max(filteredData.filter(t => t.type === 'expense' && t.category !== 'savings').reduce((sum, t) => sum + t.amount, 0), 0);
         currentMetrics.needsSpent = Math.max(filteredData.filter(t => t.type === 'expense' && t.category === 'needs').reduce((sum, t) => sum + t.amount, 0), 0);
         currentMetrics.wantsSpent = Math.max(filteredData.filter(t => t.type === 'expense' && t.category === 'wants').reduce((sum, t) => sum + t.amount, 0), 0);
-        currentMetrics.savingsSaved = Math.max(filteredData.filter(t => t.type === 'income' && t.category === 'savings').reduce((sum, t) => sum + t.amount, 0), 0);
+        currentMetrics.savingsSaved = Math.max(filteredData.filter(t => t.type === 'expense' && t.category === 'savings').reduce((sum, t) => sum + t.amount, 0), 0);
     }
 
     function updateMetricsDisplay() {
