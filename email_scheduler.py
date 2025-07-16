@@ -5,7 +5,6 @@ from flask_mail import Mail, Message
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from decimal import Decimal
-import os
 
 # Create separate Flask app for scheduler
 app = Flask(__name__)
@@ -120,8 +119,8 @@ def run_scheduler():
             current_date = current_time.date()
             
             # Send between (5-minute window)
-            if (current_time.hour == 23 and 
-                13 <= current_time.minute <= 15 and 
+            if (current_time.hour == 22 and 
+                40 <= current_time.minute <= 45 and 
                 last_sent_date != current_date):
                 
                 print(f"Triggering daily reminders at {current_time}")

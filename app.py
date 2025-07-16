@@ -19,9 +19,6 @@ from langchain_core.prompts import ChatPromptTemplate
 import random 
 import string
 from datetime import datetime
-import traceback
-
-
 
 
 app = Flask(__name__)
