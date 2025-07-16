@@ -64,7 +64,7 @@
     </div>
     <div class="col-12 col-md-6 col-lg-4 justify-content-center">
         <div class="d-flex flex-column gap-3">
-            <!-- Needs Budget Card -  -->
+            <!-- Needs Budget Card -->
             <div class="card p-2 text-center" style="background: 
                 {% set needs_limit_float = needs_limit|default(0)|float %}
                 {% set needs_spent_float = needs_spent|default(0)|float %}
@@ -81,21 +81,23 @@
                 <small class="text-white">
                     {% if needs_limit_float == 0 %}
                         Add monthly income to set budget
+                    {% elif needs_spent_float == needs_limit_float %}
+                        Reached limit!
                     {% elif needs_remaining|default(0)|float > 0 %}
                         Rs {{ needs_remaining|default(0)|float|round(2) }} remaining
-                    {% else %}
+                    {% elif needs_remaining|default(0)|float < 0 %}
                         Rs {{ (needs_remaining|default(0)|float * -1)|round(2) }} over budget!
                     {% endif %}
                 </small>
             </div>
 
-            <!-- Wants Budget Card -  -->
+            <!-- Wants Budget Card -->
             <div class="card p-2 text-center" style="background: 
                 {% set wants_limit_float = wants_limit|default(0)|float %}
                 {% set wants_spent_float = wants_spent|default(0)|float %}
                 {% if wants_limit_float == 0 %} #6c757d
                 {% elif wants_spent_float > wants_limit_float %} #dc3545
-                {% elif wants_limit_float > 0 and (wants_spent_float/wants_limit_float*100) > 80 %}#ffc107
+                {% elif wants_limit_float > 0 and (wants_spent_float/wants_limit_float*100) > 80 %} #ffc107
                 {% else %} #17a2b8
                 {% endif %};">
                 <div class="card-title fs-6 text-white">Wants Budget</div>
@@ -106,29 +108,31 @@
                 <small class="text-white">
                     {% if wants_limit_float == 0 %}
                         Add monthly income to set budget
+                    {% elif wants_spent_float == wants_limit_float %}
+                        Reached limit!
                     {% elif wants_remaining|default(0)|float > 0 %}
                         Rs {{ wants_remaining|default(0)|float|round(2) }} remaining
-                    {% else %}
+                    {% elif wants_remaining|default(0)|float < 0 %}
                         Rs {{ (wants_remaining|default(0)|float * -1)|round(2) }} over budget!
                     {% endif %}
                 </small>
             </div>
 
-            <!-- Savings Progress Card -  -->
+            <!-- Savings Progress Card -->
             <div class="card p-2 bg-success text-white text-center">
                 <div class="card-title fs-6">Savings Progress</div>
                 {% set savings_target_float = savings_target|default(0)|float %}
                 {% set savings_made_float = savings_made|default(0)|float %}
                 <h5 class="mb-1">Rs {{ savings_made_float|round(2) }} / Rs {{ savings_target_float|round(2) }}</h5>
                 <div class="progress mb-2" style="height: 10px; background-color: white;">
-                    <div class="progress-bar" style="width: {{ (savings_made_float/savings_target_float*100) if savings_target_float > 0 else 0 }}%;   background-color: #40FF40;"></div>
+                    <div class="progress-bar" style="width: {{ (savings_made_float/savings_target_float*100) if savings_target_float > 0 else 0 }}%; background-color: #40FF40;"></div>
                 </div>
                 <small>
                     {% if savings_target_float == 0 %}
                         Add monthly income to set target
                     {% elif savings_remaining|default(0)|float > 0 %}
                         Rs {{ savings_remaining|default(0)|float|round(2) }} to reach goal
-                    {% else %}
+                    {% elif savings_remaining|default(0)|float < 0 %}
                         Goal exceeded by Rs {{ (savings_remaining|default(0)|float * -1)|round(2) }}!
                     {% endif %}
                 </small>

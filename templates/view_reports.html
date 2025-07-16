@@ -300,12 +300,12 @@
         buttons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
 
-        const today = new Date(); // Current date and time: 2025-07-16 10:55 PM +0545
+        const today = new Date(); 
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7); // Exactly 7 days ago
 
         filteredData = sampleData.transactions.filter(transaction => {
-            const transactionDate = new Date(transaction.date + 'T00:00:00'); // Parse date to midnight to avoid time issues
+            const transactionDate = new Date(transaction.date + 'T00:00:00'); // Parsing date to midnight to avoid time issues
             switch (period) {
                 case '7days':
                     return transactionDate >= sevenDaysAgo && transactionDate <= today;
@@ -322,7 +322,6 @@
             }
         });
 
-        // Recalculate metrics and update display
         updateMetrics();
         updateMetricsDisplay();
         reinitializeCharts();

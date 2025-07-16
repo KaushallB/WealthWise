@@ -9,15 +9,23 @@
     <div style="text-align: center;">
       <img src="https://imgur.com/KREAI4T.png" alt="WealthWise Logo" style="width: 150px; margin-bottom: 20px;">
     </div>
-    <h2 style="color: #e74c3c; text-align: center;"> ⚠️ Budget Warning,  {{ full_name }}!⚠️</h2>
-    <p style="font-size: 16px; color: #555;">Your spending on <strong>{{ category }}</strong>  <strong>{{ status }}</strong> your allocated budget. Immediate action is recommended to stay on track. </p>
+    <h2 style="color: #e74c3c; text-align: center;">⚠️ Budget Warning, {{ full_name }}! ⚠️</h2>
+    {% if status == "exceeded" %}
+      <p style="font-size: 16px; color: #555;">Your spending on <strong>{{ category }}</strong> has <strong>exceeded</strong> your allocated budget. Immediate action is recommended to adjust your expenses.</p>
+      <p style="font-size: 16px; color: #555;">Overage: <span style="color: #e74c3c;">Rs {{ (spent - limit) | round(2) }}</span></p>
+    {% elif status == "reached" %}
+      <p style="font-size: 16px; color: #555;">Your spending on <strong>{{ category }}</strong> has <strong>reached</strong> your allocated budget. No further spending is recommended this month.</p>
+    {% elif status == "approaching" %}
+      <p style="font-size: 16px; color: #555;">Your spending on <strong>{{ category }}</strong> is <strong>approaching</strong> your allocated budget. Immediate action is recommended to stay on track.</p>
+      <p style="font-size: 16px; color: #555;">Remaining: <span style="color: #e74c3c;">Rs {{ (limit - spent) | round(2) }}</span></p>
+    {% endif %}
     <p style="font-size: 16px; color: #555;"><strong>Details:</strong></p>
     <ul style="font-size: 16px; color: #555;">
       <li>Spent: <span style="color: #e74c3c;">Rs {{ spent | round(2) }}</span></li>
       <li>Budget Limit: Rs {{ limit | round(2) }}</li>
       <li>Percentage Used: <span style="color: #e74c3c;">{{ percent | round(2) }}%</span></li>
     </ul>
-    <p style="font-size: 16pax; color: #555; margin-top: 20px;">
+    <p style="font-size: 16px; color: #555; margin-top: 20px;">
       Please review your expenses in the WealthWise dashboard to manage your budget effectively.
     </p>
     <div style="text-align: center; margin-top: 30px;">
